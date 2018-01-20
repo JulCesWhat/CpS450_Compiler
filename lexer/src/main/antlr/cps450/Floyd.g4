@@ -1,11 +1,125 @@
 grammar Floyd;
 
+
 start : ;
 
 
-VARIABLE
-   : VALID_ID_START VALID_ID_CHAR*
+// Keywords
+
+// KEYWORDS
+//    : BOOLEAN | BEGIN | CLASS | EL | SE | END | FALSE | FROM | IF | INHERITS |
+//      INT | IS | LOOP | ME | NEW | NOT | NULL | STRING | THEN | TRUE | WHILE
+//    ;
+
+BOOLEAN
+   : 'boolean'
    ;
+
+
+BEGIN
+   : 'begin'
+   ;
+
+
+CLASS
+   : 'class'
+   ;
+
+
+EL
+   : 'el'
+   ;
+
+
+SE
+   : 'se'
+   ;
+
+
+END
+   : 'end'
+   ;
+
+
+FALSE
+   : 'false'
+   ;
+
+
+FROM
+   : 'from'
+   ;
+
+
+IF
+   : 'if'
+   ;
+
+
+INHERITS
+   : 'inherits'
+   ;
+
+
+INT
+   : 'int'
+   ;
+
+
+IS
+   : 'is'
+   ;
+
+LOOP
+   : 'loop'
+   ;
+
+
+ME
+   : 'me'
+   ;
+
+
+NEW
+   : 'new'
+   ;
+
+
+NOT
+   : 'not'
+   ;
+
+
+NULL
+   : 'null'
+   ;
+
+
+STRING
+   : 'string'
+   ;
+
+
+THEN
+   : 'then'
+   ;
+
+
+TRUE
+   : 'true'
+   ;
+
+
+WHILE
+   : 'while'
+   ;
+
+
+// Identifier
+
+IDENTIFIER
+    : VALID_ID_START VALID_ID_CHAR*
+    ;
 
 
 fragment VALID_ID_START
@@ -14,21 +128,77 @@ fragment VALID_ID_START
 
 
 fragment VALID_ID_CHAR
-   : VALID_ID_START | ('0' .. '9')
+   : VALID_ID_START | VALID_ID_INT
    ;
 
 
-SCIENTIFIC_NUMBER
-   : NUMBER (E SIGN? NUMBER)?
+// Integer literal
+
+INTEGER_LITERAL
+   : '-' ? VALID_ID_INT +
    ;
 
-fragment NUMBER
-   : ('0' .. '9') + ('.' ('0' .. '9') +)?
+
+fragment VALID_ID_INT
+   : ('0' .. '9')
    ;
 
 
-fragment E
-   : 'E' | 'e'
+// String literal
+
+STRING_LITERAL
+   : '"' (~["\\] | VALID_ESCAPE_SEQUENCES)* '"'
+   ;
+
+
+fragment VALID_ESCAPE_SEQUENCES
+   : TAB | NEWLINE | FORMFEED | CARRIAGERETURN | DOUBLEQUOTE | BACKSLASH | OCTAL
+   ;
+
+
+fragment TAB
+   : ( '\\011' | '\\t' )
+   ;
+
+
+fragment NEWLINE
+   : ( '\\012' | '\\n' )
+   ;
+
+
+fragment FORMFEED
+   : ( '\\014' | '\\f' )
+   ;
+
+
+fragment CARRIAGERETURN
+   : ( '\\015' | '\\r' )
+   ;
+
+
+fragment DOUBLEQUOTE
+   : ( '\\042' | '\\"' )
+   ;
+
+
+fragment BACKSLASH
+   : ( '\\134' | '\\\\' )
+   ;
+
+
+fragment OCTAL
+   : ('\\' [0-7][0-7][0-7])
+   ;
+
+
+// Operators
+
+OPERATORS
+    : AND | SIGN | TIMES | DIV | GT | GTEQ | EQ
+    ;
+
+fragment AND
+   : '&'
    ;
 
 
@@ -37,61 +207,99 @@ fragment SIGN
    ;
 
 
-LPAREN
-   : '('
-   ;
-
-
-RPAREN
-   : ')'
-   ;
-
-
-PLUS
-   : '+'
-   ;
-
-
-MINUS
-   : '-'
-   ;
-
-
-TIMES
+fragment TIMES
    : '*'
    ;
 
 
-DIV
+fragment DIV
    : '/'
    ;
 
 
-GT
+fragment GT
    : '>'
    ;
 
 
-LT
-   : '<'
+fragment GTEQ
+   : '>='
    ;
 
 
-EQ
+fragment EQ
    : '='
    ;
 
 
-POINT
+// Miscellaneous
+
+Miscellaneous
+   : ASGOP | LPAREN | RPAREN | LBRACK | RBRACK | COMMA | SEMICOL | COLON | POINT
+   ;
+
+fragment ASGOP
+   : ':='
+   ;
+
+
+fragment LPAREN
+   : '('
+   ;
+
+
+fragment RPAREN
+   : ')'
+   ;
+
+
+fragment LBRACK
+   : '['
+   ;
+
+
+fragment RBRACK
+   : ']'
+   ;
+
+
+fragment COMMA
+   : ','
+   ;
+
+
+fragment SEMICOL
+   : ';'
+   ;
+
+
+fragment COLON
+   : ':'
+   ;
+
+
+fragment POINT
    : '.'
    ;
 
 
-POW
-   : '^'
-   ;
+// Comment
+
+COMMENT
+    : '~' ~[\r\n]* -> skip
+    ;
+
+
+ENDOFLINE_1
+    : '\r'? '\n'
+    ;
+
+
+ENDOFLINE_2
+    : '_' '\r'? '\n' -> skip
+    ;
 
 
 WS
-   : [ \r\n\t] + -> skip
+   : [ \t] + -> skip
    ;

@@ -19,7 +19,7 @@ public class Main
             System.exit(1);
         }
 
-        if(arguments[0] == "-ds" && arguments.length > 1) {
+        if(arguments[0].equals("-ds") && arguments.length > 1) {
             scanFile(arguments, true, 1);
         } else {
             scanFile(arguments, false, 0);
@@ -28,6 +28,8 @@ public class Main
 
     //Does the reading for every files that was inputed
     public static void scanFile(String[] fileNames, Boolean debug, int position) throws IOException {
+
+        
         for(int i = position; i < fileNames.length; i++) {
             System.out.println();
 
@@ -37,8 +39,8 @@ public class Main
             // Read tokens from lexer
             Token t = lexer.nextToken();
             while (t.getType() != FloydLexer.EOF) {
-            System.out.println(fileNames[i] + ":" + t.getLine() + ":" + t.getText());
-            t = lexer.nextToken();
+                System.out.println(fileNames[i] + ":" + t.getType() + t.getLine() + ":" + t.getText());
+                t = lexer.nextToken();
             }
         }
     }
