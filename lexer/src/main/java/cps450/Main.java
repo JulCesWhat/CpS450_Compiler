@@ -29,9 +29,8 @@ public class Main
     //Does the reading for every files that was inputed
     public static void scanFile(String[] fileNames, Boolean debug, int position) throws IOException {
 
-        
         for(int i = position; i < fileNames.length; i++) {
-            System.out.println();
+            System.out.println("<>START<>");
 
             CharStream input = CharStreams.fromFileName(fileNames[i]);
             FloydLexer lexer = new FloydLexer(input);
@@ -39,7 +38,46 @@ public class Main
             // Read tokens from lexer
             Token t = lexer.nextToken();
             while (t.getType() != FloydLexer.EOF) {
-                System.out.println(fileNames[i] + ":" + t.getType() + t.getLine() + ":" + t.getText());
+                //System.out.println(t.getType() + "  -Type");
+
+                String textVal = "";
+
+                if (1 == FloydLexer.EOF) {
+                    System.out.println("capivare");
+                }
+
+                //if (t.getType() != FloydLexer.INVALID_TYPE) {
+                    if(t.getType() > 0 && t.getType() <= 21) {
+                        textVal = "keyword:" + t.getText();
+                    } else {
+                        
+                        switch (t.getType()) {
+                            case 22:
+                                textVal = "identifier:" + t.getText();
+                                break;
+                            case 24:
+                                textVal = "string lit:" + t.getText();
+                                break;
+                            case 25:
+                                textVal = "operator:'" + t.getText() + "'";
+                                break;
+                            case 26:
+                                textVal = "'" + t.getText() + "'";
+                                break;
+                            case 28:
+                                textVal = "cr";
+                                break;
+                            default:
+                                textVal = "Unrecognized char   ---   " + t.getType();
+                                break;
+                        }
+                    }
+                //} else {
+                //    System.out.println("CApivara");
+                //}
+            
+
+                System.out.println(fileNames[i] + ":" + t.getLine() + "," + t.getCharPositionInLine() + ":" + textVal);
                 t = lexer.nextToken();
             }
         }
