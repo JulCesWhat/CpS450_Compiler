@@ -38,44 +38,38 @@ public class Main
             // Read tokens from lexer
             Token t = lexer.nextToken();
             while (t.getType() != FloydLexer.EOF) {
-                //System.out.println(t.getType() + "  -Type");
-
                 String textVal = "";
 
-                if (1 == FloydLexer.EOF) {
-                    System.out.println("capivare");
-                }
-
-                //if (t.getType() != FloydLexer.INVALID_TYPE) {
-                    if(t.getType() > 0 && t.getType() <= 21) {
-                        textVal = "keyword:" + t.getText();
-                    } else {
-                        
-                        switch (t.getType()) {
-                            case 22:
-                                textVal = "identifier:" + t.getText();
-                                break;
-                            case 24:
-                                textVal = "string lit:" + t.getText();
-                                break;
-                            case 25:
-                                textVal = "operator:'" + t.getText() + "'";
-                                break;
-                            case 26:
-                                textVal = "'" + t.getText() + "'";
-                                break;
-                            case 28:
-                                textVal = "cr";
-                                break;
-                            default:
-                                textVal = "Unrecognized char   ---   " + t.getType();
-                                break;
-                        }
+                if(t.getType() > 0 && t.getType() <= 21) {
+                    textVal = "keyword:" + t.getText();
+                } else if(t.getType() > 27 && t.getType() <= 35) {
+                    textVal = "'" + t.getText() + "'";
+                } 
+                else {            
+                    switch (t.getType()) {
+                        case 22:
+                            textVal = "identifier:" + t.getText();
+                            break;
+                        case 24:
+                            textVal = "string lit:" + t.getText();
+                            break;
+                        case 25:
+                            textVal = "Illegal string:" + t.getText();
+                            break;
+                        case 26:
+                            textVal = "Unterminated string:" + t.getText();
+                            break;
+                        case 27:
+                            textVal = "operator:'" + t.getText() + "'";
+                            break;
+                        case 38:
+                            textVal = "cr";
+                            break;
+                        default:
+                            textVal = "Unrecognized char: " + t.getText();
+                            break;
                     }
-                //} else {
-                //    System.out.println("CApivara");
-                //}
-            
+                }            
 
                 System.out.println(fileNames[i] + ":" + t.getLine() + "," + t.getCharPositionInLine() + ":" + textVal);
                 t = lexer.nextToken();

@@ -147,7 +147,17 @@ fragment VALID_ID_INT
 // String literal
 
 STRING_LITERAL
-   : '"' (~["\\] | VALID_ESCAPE_SEQUENCES)* '"'
+   : '"' (~["\\\t?\n] | '\\'VALID_ESCAPE_SEQUENCES)* '"'
+   ;
+
+
+ILLIGAL_STRING_LITERAL
+   : '"' (~["\\\t?\n] | '\\'~[VALID_ESCAPE_SEQUENCES])* '"'
+   ;
+
+
+UNREQ_STRING_LITERAL
+   : '"' (~["\\\t?\n] | '\\'VALID_ESCAPE_SEQUENCES)*
    ;
 
 
@@ -157,37 +167,37 @@ fragment VALID_ESCAPE_SEQUENCES
 
 
 fragment TAB
-   : ( '\\011' | '\\t' )
+   : ( '011' | 't' )
    ;
 
 
 fragment NEWLINE
-   : ( '\\012' | '\\n' )
+   : ( '012' | 'n' )
    ;
 
 
 fragment FORMFEED
-   : ( '\\014' | '\\f' )
+   : ( '014' | 'f' )
    ;
 
 
 fragment CARRIAGERETURN
-   : ( '\\015' | '\\r' )
+   : ( '015' | 'r' )
    ;
 
 
 fragment DOUBLEQUOTE
-   : ( '\\042' | '\\"' )
+   : ( '042' | '"' )
    ;
 
 
 fragment BACKSLASH
-   : ( '\\134' | '\\\\' )
+   : ( '134' | '\\' )
    ;
 
 
 fragment OCTAL
-   : ('\\' [0-7][0-7][0-7])
+   : ([0-7][0-7][0-7])
    ;
 
 
@@ -234,51 +244,51 @@ fragment EQ
 
 // Miscellaneous
 
-Miscellaneous
-   : ASGOP | LPAREN | RPAREN | LBRACK | RBRACK | COMMA | SEMICOL | COLON | POINT
-   ;
+// Miscellaneous
+//    : ASGOP | LPAREN | RPAREN | LBRACK | RBRACK | COMMA | SEMICOL | COLON | POINT
+//    ;
 
-fragment ASGOP
+ASGOP
    : ':='
    ;
 
 
-fragment LPAREN
+LPAREN
    : '('
    ;
 
 
-fragment RPAREN
+RPAREN
    : ')'
    ;
 
 
-fragment LBRACK
+LBRACK
    : '['
    ;
 
 
-fragment RBRACK
+RBRACK
    : ']'
    ;
 
 
-fragment COMMA
+COMMA
    : ','
    ;
 
 
-fragment SEMICOL
+SEMICOL
    : ';'
    ;
 
 
-fragment COLON
+COLON
    : ':'
    ;
 
 
-fragment POINT
+POINT
    : '.'
    ;
 
@@ -302,4 +312,8 @@ ENDOFLINE_2
 
 WS
    : [ \t] + -> skip
+   ;
+
+UNREQ_CHAR
+   : (~[\r?\n])
    ;

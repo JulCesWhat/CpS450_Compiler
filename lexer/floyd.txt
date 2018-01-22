@@ -1,3 +1,3 @@
-% ~ The % is a bad token 
+%% ~ The % is a bad token 
 end "Unterminated
 "Hey\q"
