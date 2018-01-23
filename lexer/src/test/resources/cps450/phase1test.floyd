@@ -1,1 +1,3 @@
 "capi"
+class Main is
+  x: int        ~ x coord

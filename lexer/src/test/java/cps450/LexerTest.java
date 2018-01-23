@@ -20,7 +20,10 @@ public class LexerTest {
 
 		//assertNextToken(FloydLexer.UNREQ_CHAR, "%");
 		assertNextToken(FloydLexer.STRING_LITERAL);
-		//assertNextToken(FloydLexer.ILLIGAL_STRING_LITERAL, "\"Hey\\q\"");
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.CLASS, "class");
+		assertNextToken(FloydLexer.IDENTIFIER, "Main");
+		assertNextToken(FloydLexer.IS, "is");
 		//assertNextToken(FloydLexer.EOF);
 
 	}
