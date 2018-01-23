@@ -1,0 +1,146 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Floyd",
+	"patterns": [
+		{
+			"name": "storage.type.floyd",
+			"match": "\\b(class|inherits)\\b"
+		},
+		{
+			"name": "storage.modifier.floyd",
+			"match": "\\b(begin|end)\\b"
+		},
+		{
+			"name": "keyword.statement.floyd",
+			"match": "\\b(else|if|then|loop|while|not)\\b"
+		},
+		{
+			"name": "support.type.floyd",
+			"match": "\\b(int|boolean|string)\\b"
+		},
+		{
+			"name": "keyword.expressions-and-types.floyd",
+			"match": "\\b(is|new|el|se|me)\\b"
+		},
+		{
+			"name": "constant.language.floyd",
+			"match": "\\b(true|false|null)\\b"
+		},
+		{
+			"include": "#comment"
+		},
+		{
+			"include": "#literal"
+		},
+		{
+			"include": "#operator"
+		}
+	],
+	"repository": {
+		"comment": {
+			"patterns": [
+				{
+					"name": "comment.line",
+					"begin": "~",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.definition.comment.floyd"
+						}
+					},
+					"end": "\\n"
+				}
+			]
+		},
+		"escaped-char": {
+			"patterns": [
+				{
+					"name": "constant.character.escape.floyd",
+					"match": "\\\\([\\\\tnr\"']|[0-8][0-8][0-8])"
+				},
+				{
+					"name": "constant.character.escape.floyd",
+					"match": "\\\\(x\\h{2}|u\\h{4}|U\\h{8})"
+				},
+				{
+					"name": "invalid.illegal.constant.character.escape.floyd",
+					"match": "\\\\[^uxU]"
+				}
+			]
+		},
+		"identifier": {
+			"match": "([a-z]|[A-Z]|_)([a-z]|[A-Z]|_|[0-9])*",
+			"captures": {
+				"0": {
+					"name": "variable.other.positional.floyd"
+				}
+			}
+		},
+		"literal": {
+			"patterns": [
+				{
+					"include": "#literal-number"
+				},
+				{
+					"include": "#literal-string"
+				}
+			]
+		},
+		"literal-number": {
+			"name": "constant.numeric.floyd",
+			"match": "-?[0-9]+"
+		},
+		"literal-string": {
+			"name": "string.quoted.double.floyd",
+			"begin": "\"",
+			"end": "\"",
+			"beginCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.begin.floyd"
+				}
+			},
+			"endCaptures": {
+				"0": {
+					"name": "punctuation.definition.string.end.floyd"
+				}
+			},
+			"patterns": [
+				{
+					"include": "#quoted-text"
+				}
+			]
+		},
+		"operator-character": {
+			"name": "keyword.operator.swift",
+			"match": "[\\/=\\-+!*%>>==&|^~,\\?:\\[\\]]"
+		},
+		"quoted-text": {
+			"patterns": [
+				{
+					"name": "meta.embedded.line.floyd",
+					"contentName": "source.floyd",
+					"begin": "\\\\\\(",
+					"end": "\\)",
+					"beginCaptures": {
+						"0": {
+							"name": "punctuation.section.embedded.begin.floyd"
+						}
+					},
+					"endCaptures": {
+						"0": {
+							"name": "punctuation.section.embedded.end.floyd"
+						}
+					},
+					"patterns": [
+						{
+							"include": "$self"
+						}
+					]
+				},
+				{
+					"include": "#escaped-char"
+				}
+			]
+		}
+	},
+	"scopeName": "source.floyd"
+}

@@ -1,0 +1,26 @@
+{
+    "name": "floyd",
+    "displayName": "Floyd",
+    "description": "Best high level academic language.",
+    "version": "0.0.1",
+    "publisher": "JulCesWhat",
+    "engines": {
+        "vscode": "^1.19.0"
+    },
+    "categories": [
+        "Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "floyd",
+            "aliases": ["Floyd", "floyd"],
+            "extensions": [".floyd"],
+            "configuration": "./floyd.configuration.json"
+        }],
+        "grammars": [{
+            "language": "floyd",
+            "scopeName": "source.floyd",
+            "path": "./syntaxes/floyd.tmLanguage.json"
+        }]
+    }
+}
