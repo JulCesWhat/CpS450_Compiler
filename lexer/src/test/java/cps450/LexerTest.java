@@ -10,18 +10,18 @@ import org.antlr.v4.runtime.Token;
 import org.junit.Test;
 
 public class LexerTest {
-	ArithmeticLexer lex;
+	FloydLexer lex;
 
 	@Test
 	public void testSuccessfulScan() throws IOException {
 		CharStream input = CharStreams.fromStream(
-				getClass().getResourceAsStream("lexertest.txt"));
+				getClass().getResourceAsStream("test_1.txt"));
 		lex = new ArithmeticLexer(input);
 
-		assertNextToken(ArithmeticLexer.SCIENTIFIC_NUMBER, "2.5");
-		assertNextToken(ArithmeticLexer.DIV);
-		assertNextToken(ArithmeticLexer.SCIENTIFIC_NUMBER, "3.6e12");
-		assertNextToken(ArithmeticLexer.EOF);
+		assertNextToken(FloydLexer.UNREQ_CHAR, "%");
+		assertNextToken(FloydLexer.UNREQ_STRING_LITERAL);
+		assertNextToken(FloydLexer.ILLIGAL_STRING_LITERAL, "\"Hey\\q\"");
+		assertNextToken(FloydLexer.EOF);
 
 	}
 

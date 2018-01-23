@@ -40,42 +40,75 @@ public class Main
             while (t.getType() != FloydLexer.EOF) {
                 String textVal = "";
 
-                if(t.getType() > 0 && t.getType() <= 21) {
-                    textVal = "keyword:" + t.getText();
-                } else if(t.getType() > 27 && t.getType() <= 35) {
-                    textVal = "'" + t.getText() + "'";
-                } 
-                else {            
-                    switch (t.getType()) {
-                        case 22:
-                            textVal = "identifier:" + t.getText();
-                            break;
-                        case 24:
-                            textVal = "string lit:" + t.getText();
-                            break;
-                        case 25:
-                            textVal = "Illegal string:" + t.getText();
-                            break;
-                        case 26:
-                            textVal = "Unterminated string:" + t.getText();
-                            break;
-                        case 27:
-                            textVal = "operator:'" + t.getText() + "'";
-                            break;
-                        case 38:
-                            textVal = "cr";
-                            break;
-                        default:
-                            textVal = "Unrecognized char: " + t.getText();
-                            break;
-                    }
-                }            
+                if (debug) {
+                    textVal = DSflag(t);
+                } else {
+                    textVal = NoDSflag(t);
+                }
 
-                System.out.println(fileNames[i] + ":" + t.getLine() + "," + t.getCharPositionInLine() + ":" + textVal);
+                if(!textVal.equals("")) {
+                    System.out.println(fileNames[i] + ":" + t.getLine() + "," + t.getCharPositionInLine() + ":" + textVal);
+                }
+
                 t = lexer.nextToken();
             }
         }
     }
 
+    public static String DSflag(Token t) {
+        String textVal = "";
+
+        if(t.getType() > 0 && t.getType() <= 21) {
+            textVal = "keyword:" + t.getText();
+        } else if(t.getType() > 27 && t.getType() <= 35) {
+            textVal = "'" + t.getText() + "'";
+        } 
+        else {            
+            switch (t.getType()) {
+                case 22:
+                    textVal = "identifier:" + t.getText();
+                    break;
+                case 23:
+                    textVal = "integer lit:" + t.getText();
+                    break;
+                case 24:
+                    textVal = "string lit:" + t.getText();
+                    break;
+                case 25:
+                    textVal = "Illegal string:" + t.getText();
+                    break;
+                case 26:
+                    textVal = "Unterminated string:" + t.getText();
+                    break;
+                case 27:
+                    textVal = "operator:'" + t.getText() + "'";
+                    break;
+                case 38:
+                    textVal = "cr";
+                    break;
+                case 41:
+                    textVal = "Unrecognized char: " + t.getText();
+                    break;
+            }
+        }
+        return textVal;
+    }
+
+    public static String NoDSflag(Token t) {
+        String textVal = "";
+
+        switch (t.getType()) {
+            case 25:
+                textVal = "Illegal string:" + t.getText();
+                break;
+            case 26:
+                textVal = "Unterminated string:" + t.getText();
+                break;
+            case 41:
+                textVal = "Unrecognized char: " + t.getText();
+                break;
+        }
+        return textVal;
+    }
 }
 
