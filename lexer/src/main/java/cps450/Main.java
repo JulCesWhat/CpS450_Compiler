@@ -30,7 +30,7 @@ public class Main
     public static void scanFile(String[] fileNames, Boolean debug, int position) throws IOException {
 
         for(int i = position; i < fileNames.length; i++) {
-            System.out.println("<>START<>");
+            System.out.println("<*>START<*>");
 
             CharStream input = CharStreams.fromFileName(fileNames[i]);
             FloydLexer lexer = new FloydLexer(input);
@@ -55,6 +55,7 @@ public class Main
         }
     }
 
+    //Printing for -ds flag
     public static String DSflag(Token t) {
         String textVal = "";
 
@@ -94,6 +95,7 @@ public class Main
         return textVal;
     }
 
+    //Printing for non -ds flag
     public static String NoDSflag(Token t) {
         String textVal = "";
 

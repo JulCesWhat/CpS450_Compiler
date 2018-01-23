@@ -12,6 +12,7 @@ import org.junit.Test;
 public class LexerTest {
 	FloydLexer lex;
 
+	//Basic tests for Floyd language
 	@Test
 	public void testSuccessfulScan() throws IOException {
 		CharStream input = CharStreams.fromStream(
@@ -63,7 +64,6 @@ public class LexerTest {
 		assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.ILLIGAL_STRING_LITERAL);
 		assertNextToken(FloydLexer.ENDOFLINE_1);
-		//assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.EOF);
 
 	}
