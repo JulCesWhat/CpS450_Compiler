@@ -16,7 +16,7 @@ public class LexerTest {
 	public void testSuccessfulScan() throws IOException {
 		CharStream input = CharStreams.fromStream(
 				getClass().getResourceAsStream("test_1.txt"));
-		lex = new ArithmeticLexer(input);
+		lex = new FloydLexer(input);
 
 		assertNextToken(FloydLexer.UNREQ_CHAR, "%");
 		assertNextToken(FloydLexer.UNREQ_STRING_LITERAL);
