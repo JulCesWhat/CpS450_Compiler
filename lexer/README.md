@@ -19,7 +19,7 @@ gradlew test
 To run this project, execute:
 
 ```
-build/install/lexer/bin/lexer math.txt
+build/install/lexer/bin/lexer.bat floyd.txt
 ```
 
 ## Project Structure

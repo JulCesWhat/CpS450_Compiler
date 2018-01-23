@@ -15,13 +15,13 @@ public class LexerTest {
 	@Test
 	public void testSuccessfulScan() throws IOException {
 		CharStream input = CharStreams.fromStream(
-				getClass().getResourceAsStream("test_1.txt"));
+				getClass().getResourceAsStream("phase1test.floyd"));
 		lex = new FloydLexer(input);
 
-		assertNextToken(FloydLexer.UNREQ_CHAR, "%");
-		assertNextToken(FloydLexer.UNREQ_STRING_LITERAL);
-		assertNextToken(FloydLexer.ILLIGAL_STRING_LITERAL, "\"Hey\\q\"");
-		assertNextToken(FloydLexer.EOF);
+		//assertNextToken(FloydLexer.UNREQ_CHAR, "%");
+		assertNextToken(FloydLexer.STRING_LITERAL);
+		//assertNextToken(FloydLexer.ILLIGAL_STRING_LITERAL, "\"Hey\\q\"");
+		//assertNextToken(FloydLexer.EOF);
 
 	}
 
