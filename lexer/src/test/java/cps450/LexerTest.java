@@ -19,12 +19,52 @@ public class LexerTest {
 		lex = new FloydLexer(input);
 
 		//assertNextToken(FloydLexer.UNREQ_CHAR, "%");
-		assertNextToken(FloydLexer.STRING_LITERAL);
 		assertNextToken(FloydLexer.ENDOFLINE_1);
-		assertNextToken(FloydLexer.CLASS, "class");
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.CLASS);
 		assertNextToken(FloydLexer.IDENTIFIER, "Main");
-		assertNextToken(FloydLexer.IS, "is");
-		//assertNextToken(FloydLexer.EOF);
+		assertNextToken(FloydLexer.IS);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.IDENTIFIER, "x");
+		assertNextToken(FloydLexer.COLON);
+		assertNextToken(FloydLexer.INT);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.IDENTIFIER, "name");
+		assertNextToken(FloydLexer.COLON);
+		assertNextToken(FloydLexer.STRING);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+
+		assertNextToken(FloydLexer.IDENTIFIER, "start");
+		assertNextToken(FloydLexer.LPAREN);
+		assertNextToken(FloydLexer.RPAREN);
+		assertNextToken(FloydLexer.IS);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.IDENTIFIER, "i");
+		assertNextToken(FloydLexer.COLON);
+		assertNextToken(FloydLexer.INT);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.BEGIN);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.IDENTIFIER, "print");
+		assertNextToken(FloydLexer.LPAREN);
+		//assertNextToken(FloydLexer.STRING_LITERAL, "\"Hey,\"Sue!\"\"");  <-- Took me some time to realize that it is not the same. :)
+		assertNextToken(FloydLexer.STRING_LITERAL);
+		assertNextToken(FloydLexer.OPERATORS, "&");
+		assertNextToken(FloydLexer.IDENTIFIER, "name");
+		assertNextToken(FloydLexer.RPAREN);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.END);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.UNREQ_CHAR, "%");
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.END);
+		assertNextToken(FloydLexer.UNREQ_STRING_LITERAL);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.ILLIGAL_STRING_LITERAL);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		//assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.EOF);
 
 	}
 
