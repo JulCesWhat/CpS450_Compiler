@@ -1,0 +1,23 @@
+~ This is a comment
+
+class Main is
+  x: int       ~ x coord
+  name: string ~ identifier
+
+  start() is
+    i: int
+    begin
+      print("Hey,\"Sue!\"" & name)
+    end
+% ~ The % is a bad token
+end "Unterminated\383"
+"Hey\t"
+
+class capi is
+  shishi: string
+
+  run() is
+    id: string
+    begin
+      print("hiiii" & id + "  " + shishi)
+    end
