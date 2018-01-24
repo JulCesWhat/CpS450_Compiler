@@ -1,8 +1,8 @@
 ~ This is a comment
-
+end "Unterminated
+"Hey\q"
 class Main is
   x: int        ~ x coord
-  name: string  ~ identifier
 
   start() is
     i: int
@@ -10,5 +10,5 @@ class Main is
       print("Hey,\"Sue!\"" & name)
     end 
 % ~ The % is a bad token 
-end "Unterminated
-"Hey\q"
+123
+-12

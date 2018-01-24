@@ -21,6 +21,10 @@ public class LexerTest {
 
 		//assertNextToken(FloydLexer.UNREQ_CHAR, "%");
 		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.END);
+		assertNextToken(FloydLexer.UNREQ_STRING_LITERAL);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.ILLIGAL_STRING_LITERAL);
 		assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.CLASS);
 		assertNextToken(FloydLexer.IDENTIFIER, "Main");
@@ -29,10 +33,6 @@ public class LexerTest {
 		assertNextToken(FloydLexer.IDENTIFIER, "x");
 		assertNextToken(FloydLexer.COLON);
 		assertNextToken(FloydLexer.INT);
-		assertNextToken(FloydLexer.ENDOFLINE_1);
-		assertNextToken(FloydLexer.IDENTIFIER, "name");
-		assertNextToken(FloydLexer.COLON);
-		assertNextToken(FloydLexer.STRING);
 		assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.ENDOFLINE_1);
 
@@ -59,11 +59,9 @@ public class LexerTest {
 		assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.UNREQ_CHAR, "%");
 		assertNextToken(FloydLexer.ENDOFLINE_1);
-		assertNextToken(FloydLexer.END);
-		assertNextToken(FloydLexer.UNREQ_STRING_LITERAL);
+		assertNextToken(FloydLexer.INTEGER_LITERAL);
 		assertNextToken(FloydLexer.ENDOFLINE_1);
-		assertNextToken(FloydLexer.ILLIGAL_STRING_LITERAL);
-		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.INTEGER_LITERAL);
 		assertNextToken(FloydLexer.EOF);
 
 	}

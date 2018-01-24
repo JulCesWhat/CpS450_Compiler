@@ -12,8 +12,9 @@ No know bugs.
 
 # Academic integrity
 
-This project ws done completely by me.
+This project was done completely by me.
 Signature: Julio Cesar Whatley
 
 # Bonus
 
+[Bonus Link](https://streamable.com/b7hnf)
