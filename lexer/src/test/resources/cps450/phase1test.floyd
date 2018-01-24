@@ -9,6 +9,8 @@ class Main is
     begin
       print("Hey,\"Sue!\"" & name)
     end 
+    
 % ~ The % is a bad token 
 123
 -12
+&+"\111capi"

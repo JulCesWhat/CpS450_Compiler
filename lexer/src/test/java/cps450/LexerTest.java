@@ -57,11 +57,17 @@ public class LexerTest {
 		assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.END);
 		assertNextToken(FloydLexer.ENDOFLINE_1);
+
+		assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.UNREQ_CHAR, "%");
 		assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.INTEGER_LITERAL);
 		assertNextToken(FloydLexer.ENDOFLINE_1);
 		assertNextToken(FloydLexer.INTEGER_LITERAL);
+		assertNextToken(FloydLexer.ENDOFLINE_1);
+		assertNextToken(FloydLexer.OPERATORS, "&");
+		assertNextToken(FloydLexer.OPERATORS, "+");
+		assertNextToken(FloydLexer.STRING_LITERAL);
 		assertNextToken(FloydLexer.EOF);
 
 	}
