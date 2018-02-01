@@ -4,13 +4,6 @@ grammar Floyd;
 start : ;
 
 
-// Keywords
-
-// KEYWORDS
-//    : BOOLEAN | BEGIN | CLASS | EL | SE | END | FALSE | FROM | IF | INHERITS |
-//      INT | IS | LOOP | ME | NEW | NOT | NULL | STRING | THEN | TRUE | WHILE
-//    ;
-
 BOOLEAN
    : 'boolean'
    ;
