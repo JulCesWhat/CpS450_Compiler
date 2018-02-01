@@ -1,7 +1,12 @@
 grammar Floyd;
 
+program
+   : start
+   ;
 
-start : ;
+start
+   : 'start' LPAREN RPAREN IS 'end' 'start'
+   ;
 
 
 BOOLEAN

@@ -24,14 +24,16 @@ public class Main
 
         boolean debugScanner = false;
         boolean debugParser = false;
-        ArrayList<Integer> filenames = new ArrayList<Integer>();
+        //ArrayList<Integer> filenames = new ArrayList<Integer>();
+        String filename = null;
         for (String arg: arguments) {
         	if (arg.equals("-ds"))
         		debugScanner = true;
         	else if (arg.equals("-dp"))
         		debugParser = true;
         	else
-        		filenames.add(arg);
+        		//filenames.add(arg);
+                filename = arg;
         }
 
         
@@ -42,15 +44,15 @@ public class Main
 
 
         CharStream input = CharStreams.fromFileName(filename);
-        MyTinyLexer lexer = new MyTinyLexer(input, debugScanner);
+        MyFloydLexer lexer = new MyFloydLexer(input, debugScanner);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        TinyParser parser = new TinyParser(tokens);
+        FloydParser parser = new FloydParser(tokens);
         
         //parser.setErrorHandler(new TinyErrorHandler());
         // Suppress default error messages
         parser.removeErrorListener(ConsoleErrorListener.INSTANCE);
         // Register my own error handler
-        parser.addErrorListener(new MyTinyErrorListener());
+        parser.addErrorListener(new MyFloydErrorListener());
         
         ParseTree tree = parser.program();
         
@@ -60,6 +62,7 @@ public class Main
         
         System.out.println(parser.getNumberOfSyntaxErrors() + " syntax error(s)");
     }
+}
 
 //     //Does the reading for every files that was inputed
 //     public static void scanFile(ArrayList<Integer> fileNames, Boolean debug) throws IOException {
