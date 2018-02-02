@@ -4,11 +4,11 @@ This repository contains CpS 450 Class Files.
 
 # Number of hours spent on project
 
-6 hours spent on project.
+4 hours spent on project.
 
 # Known bugs
 
-No know bugs.
+Precedence not working correctly, but passes the requirements and successfully parses cptestok.floyd. ;)
 
 # Academic integrity
 
