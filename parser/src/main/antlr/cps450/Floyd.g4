@@ -1,12 +1,185 @@
 grammar Floyd;
 
+
 program
    : start
    ;
 
 start
-   : 'start' LPAREN RPAREN IS 'end' 'start'
+   : ENDOFLINE_1* class_N ( ENDOFLINE_1* class_N )* ENDOFLINE_1*
    ;
+
+
+//class
+
+class_N
+   : CLASS IDENTIFIER ( INHERITS FROM IDENTIFIER )? IS ENDOFLINE_1+
+     var_decl*
+     method_decl*
+     END IDENTIFIER
+   ;
+
+
+//var declaration
+
+var_decl
+   : IDENTIFIER ( COLON type )? ( ASGOP expression )? ENDOFLINE_1+
+   ;
+
+
+//method declaration
+
+method_decl
+   : IDENTIFIER LPAREN (argument_decl_list)? RPAREN ( COLON type )? IS ENDOFLINE_1+
+     var_decl*
+     BEGIN ENDOFLINE_1+
+     statement_list
+     END IDENTIFIER ENDOFLINE_1+
+   ;
+
+
+argument_decl_list
+   : ( argument_decl SEMICOL )* argument_decl
+   ;
+
+
+argument_decl
+   : IDENTIFIER COLON type
+   ;
+
+
+type
+   : INT
+   | STRING
+   | BOOLEAN
+   | IDENTIFIER
+   | type LBRACK (expression)? RBRACK
+   ;
+
+
+statement_list
+   : ( statement ENDOFLINE_1+ )*
+   ;
+
+
+statement
+   : assignment_stmt
+   | if_stmt
+   | loop_stmt
+   | call_stmt
+   ;
+
+
+assignment_stmt
+   : IDENTIFIER ( LBRACK expression RBRACK )* ASGOP expression
+   ;
+
+
+if_stmt
+   : IF expression THEN (ENDOFLINE_1)+
+     statement_list
+     ( ELSE ENDOFLINE_1+ statement_list )?
+     END IF
+   ;
+
+
+loop_stmt
+   : LOOP WHILE expression ENDOFLINE_1+
+     statement_list
+     END LOOP
+   ;
+
+
+call_stmt
+   : ( expression POINT )? IDENTIFIER LPAREN ( expression_list )? RPAREN
+   ;
+
+
+expression_list
+   : ( expression COMMA )* expression
+   ;
+
+
+expression
+   : IDENTIFIER
+   | STRING_LITERAL
+   | INTEGER_LITERAL
+   | TRUE
+   | FALSE
+   | NULL
+   | ME
+   | NEW type
+   | expression binary_op expression
+   | unary_op expression
+   | LPAREN expression RPAREN
+   | IDENTIFIER LPAREN ( expression_list )? RPAREN
+   | expression POINT IDENTIFIER LPAREN ( expression_list )? RPAREN
+   | IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )*
+   ;
+
+
+binary_op
+   : 'or' | 'and' | '=' | '>' | '>=' | '&' | '+' | '-' | '*' | '/'
+   ;
+
+
+unary_op
+   : '-' | '+' | 'not'
+   ;
+
+// equality
+//    : comparison ( ( '=' ) comparison )* 
+//    ;
+
+// comparison
+//    : addition ( ( '>' | '>=' ) addition )*
+//    ;
+
+
+// addition
+//    : multiplication ( ( '-' | '+' ) multiplication )*
+//    ;
+
+
+// multiplication
+//    : unary_op ( ( '/' | '*' ) unary_op )*
+//    ;
+
+
+// unary_op
+//    : ( '-' | '+' | 'not' ) unary_op
+//    | primary
+//    ;
+
+// primary
+//    : STRING_LITERAL
+//    | INTEGER_LITERAL
+//    | TRUE
+//    | FALSE
+//    | NULL
+//    | LPAREN expression RPAREN
+//    ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 BOOLEAN
@@ -24,13 +197,8 @@ CLASS
    ;
 
 
-EL
-   : 'el'
-   ;
-
-
-SE
-   : 'se'
+ELSE
+   : 'else'
    ;
 
 
@@ -201,41 +369,45 @@ fragment OCTAL
 
 // Operators
 
-OPERATORS
-    : AND | SIGN | TIMES | DIV | GT | GTEQ | EQ
-    ;
+// OPERATORS
+//     : AND | SIGN | TIMES | DIV | GT | GTEQ | EQ
+//     ;
 
-fragment AND
+AND
    : '&'
    ;
 
 
-fragment SIGN
-   : ('+' | '-')
+ADD
+   : '+'
+   ;
+
+MINUS
+   : '-'
    ;
 
 
-fragment TIMES
+MUL
    : '*'
    ;
 
 
-fragment DIV
+DIV
    : '/'
    ;
 
 
-fragment GT
+GT
    : '>'
    ;
 
 
-fragment GTEQ
+GTEQ
    : '>='
    ;
 
 
-fragment EQ
+EQ
    : '='
    ;
 
