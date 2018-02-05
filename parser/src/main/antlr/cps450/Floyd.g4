@@ -109,7 +109,7 @@ expression
    | NULL
    | ME
    | NEW type
-   | expression binary_op expression
+   | expression (binary_op expression)+
    | unary_op expression
    | LPAREN expression RPAREN
    | IDENTIFIER LPAREN ( expression_list )? RPAREN
@@ -122,43 +122,9 @@ binary_op
    : 'or' | 'and' | '=' | '>' | '>=' | '&' | '+' | '-' | '*' | '/'
    ;
 
-
 unary_op
    : '-' | '+' | 'not'
    ;
-
-// equality
-//    : comparison ( ( '=' ) comparison )* 
-//    ;
-
-// comparison
-//    : addition ( ( '>' | '>=' ) addition )*
-//    ;
-
-
-// addition
-//    : multiplication ( ( '-' | '+' ) multiplication )*
-//    ;
-
-
-// multiplication
-//    : unary_op ( ( '/' | '*' ) unary_op )*
-//    ;
-
-
-// unary_op
-//    : ( '-' | '+' | 'not' ) unary_op
-//    | primary
-//    ;
-
-// primary
-//    : STRING_LITERAL
-//    | INTEGER_LITERAL
-//    | TRUE
-//    | FALSE
-//    | NULL
-//    | LPAREN expression RPAREN
-//    ;
 
 
 
@@ -373,12 +339,12 @@ fragment OCTAL
 //     : AND | SIGN | TIMES | DIV | GT | GTEQ | EQ
 //     ;
 
-AND
+LAND
    : '&'
    ;
 
 
-ADD
+PLUS
    : '+'
    ;
 
