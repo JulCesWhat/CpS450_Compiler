@@ -100,7 +100,67 @@ expression_list
    ;
 
 
+// expression
+//    : IDENTIFIER
+//    | STRING_LITERAL
+//    | INTEGER_LITERAL
+//    | TRUE
+//    | FALSE
+//    | NULL
+//    | ME
+//    | NEW type
+//    | expression (binary_op expression)+
+//    | unary_op expression
+//    | LPAREN expression RPAREN
+//    | IDENTIFIER LPAREN ( expression_list )? RPAREN
+//    | expression POINT IDENTIFIER LPAREN ( expression_list )? RPAREN
+//    | IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )*
+//    ;
+
+
+// binary_op
+//    : 'or' | 'and' | '=' | '>' | '>=' | '&' | '+' | '-' | '*' | '/'
+//    ;
+
+// unary_op
+//    : '-' | '+' | 'not'
+//    ;
+
 expression
+   :  logical_expr ( 'or' logical_expr)*
+   ;
+
+logical_expr
+   : relational_expr ( 'and' relational_expr)*
+   ;
+
+relational_expr
+   : canca_expr ( ( GT | GTEQ | EQ )  canca_expr)* 
+   ;
+
+canca_expr
+   : add_sub_expr ( '&' add_sub_expr )*
+   ;
+
+add_sub_expr
+   : mul_div_expr ( ( PLUS | MINUS ) mul_div_expr )*
+   ;
+
+mul_div_expr
+   : term ( ( MUL | DIV ) term )*
+   ;
+
+
+
+unary_expr
+   : ( MINUS | PLUS | NOT)
+   ;
+
+method_new_expr
+   : ( POINT | NEW )
+   ;
+
+term
    : IDENTIFIER
    | STRING_LITERAL
    | INTEGER_LITERAL
@@ -108,22 +168,6 @@ expression
    | FALSE
    | NULL
    | ME
-   | NEW type
-   | expression (binary_op expression)+
-   | unary_op expression
-   | LPAREN expression RPAREN
-   | IDENTIFIER LPAREN ( expression_list )? RPAREN
-   | expression POINT IDENTIFIER LPAREN ( expression_list )? RPAREN
-   | IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )*
-   ;
-
-
-binary_op
-   : 'or' | 'and' | '=' | '>' | '>=' | '&' | '+' | '-' | '*' | '/'
-   ;
-
-unary_op
-   : '-' | '+' | 'not'
    ;
 
 
