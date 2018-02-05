@@ -1,0 +1,101 @@
+[1mdiff --git a/parser/src/main/antlr/cps450/Floyd.g4 b/parser/src/main/antlr/cps450/Floyd.g4[m
+[1mindex aef723a..6077b1b 100644[m
+[1m--- a/parser/src/main/antlr/cps450/Floyd.g4[m
+[1m+++ b/parser/src/main/antlr/cps450/Floyd.g4[m
+[36m@@ -127,39 +127,55 @@[m [munary_op[m
+    : '-' | '+' | 'not'[m
+    ;[m
+ [m
+[31m-// equality[m
+[31m-//    : comparison ( ( '=' ) comparison )* [m
+[31m-//    ;[m
+[31m-[m
+[31m-// comparison[m
+[31m-//    : addition ( ( '>' | '>=' ) addition )*[m
+[31m-//    ;[m
+[31m-[m
+[32m+[m[32madd_op[m
+[32m+[m[32m   : PLUS[m
+[32m+[m[32m   | MINUS[m
+[32m+[m[32m   ;[m
+ [m
+[31m-// addition[m
+[31m-//    : multiplication ( ( '-' | '+' ) multiplication )*[m
+[31m-//    ;[m
+[32m+[m[32mmul_op[m
+[32m+[m[32m   : MUL[m
+[32m+[m[32m   | DIV[m
+[32m+[m[32m   ;[m
+ [m
+ [m
+[31m-// multiplication[m
+[31m-//    : unary_op ( ( '/' | '*' ) unary_op )*[m
+[31m-//    ;[m
+ [m
+ [m
+[31m-// unary_op[m
+[31m-//    : ( '-' | '+' | 'not' ) unary_op[m
+[31m-//    | primary[m
+[31m-//    ;[m
+ [m
+[31m-// primary[m
+[31m-//    : STRING_LITERAL[m
+[31m-//    | INTEGER_LITERAL[m
+[31m-//    | TRUE[m
+[31m-//    | FALSE[m
+[31m-//    | NULL[m
+[31m-//    | LPAREN expression RPAREN[m
+[31m-//    ;[m
+ [m
+[32m+[m[32m// equality[m[41m [m
+[32m+[m[32m//    : comparison ( ( '=' ) comparison )*[m[41m  [m
+[32m+[m[32m//    ;[m[41m [m
+[32m+[m[41m [m
+[32m+[m[32m// comparison[m[41m [m
+[32m+[m[32m//    : addition ( ( '>' | '>=' ) addition )*[m[41m [m
+[32m+[m[32m//    ;[m[41m [m
+[32m+[m[41m [m
+[32m+[m[41m [m
+[32m+[m[32m// addition[m[41m [m
+[32m+[m[32m//    : multiplication ( ( '-' | '+' ) multiplication )*[m[41m [m
+[32m+[m[32m//    ;[m[41m [m
+[32m+[m[41m [m
+[32m+[m[41m [m
+[32m+[m[32m// multiplication[m[41m [m
+[32m+[m[32m//    : unary_op ( ( '/' | '*' ) unary_op )*[m[41m [m
+[32m+[m[32m//    ;[m[41m [m
+[32m+[m[41m [m
+[32m+[m[41m [m
+[32m+[m[32m// unary_op[m[41m [m
+[32m+[m[32m//    : ( '-' | '+' | 'not' ) unary_op[m[41m [m
+[32m+[m[32m//    | primary[m[41m [m
+[32m+[m[32m//    ;[m[41m [m
+[32m+[m[41m [m
+[32m+[m[32m// primary[m[41m [m
+[32m+[m[32m//    : STRING_LITERAL[m[41m [m
+[32m+[m[32m//    | INTEGER_LITERAL[m[41m [m
+[32m+[m[32m//    | TRUE[m[41m [m
+[32m+[m[32m//    | FALSE[m[41m [m
+[32m+[m[32m//    | NULL[m[41m [m
+[32m+[m[32m//    | LPAREN expression RPAREN[m[41m [m
+[32m+[m[32m//    ;[m[41m [m
+[32m+[m[41m [m
+[32m+[m[41m [m
+ [m
+ [m
+ [m
+[36m@@ -373,12 +389,12 @@[m [mfragment OCTAL[m
+ //     : AND | SIGN | TIMES | DIV | GT | GTEQ | EQ[m
+ //     ;[m
+ [m
+[31m-AND[m
+[32m+[m[32mLAND[m
+    : '&'[m
+    ;[m
+ [m
+ [m
+[31m-ADD[m
+[32m+[m[32mPLUS[m
+    : '+'[m
+    ;[m
+ [m
