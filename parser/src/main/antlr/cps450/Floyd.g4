@@ -100,6 +100,10 @@ expression_list
    ;
 
 
+// expression_list
+//    : '{' expression ',' '}' expression
+//    ;
+
 // expression
 //    : IDENTIFIER
 //    | STRING_LITERAL
@@ -127,18 +131,22 @@ expression_list
 //    ;
 
 expression
-   :  logical_expr ( 'or' logical_expr)*
+   : binary_expr
+   ;
+
+binary_expr
+   : logical_expr ( 'or' logical_expr )*
    ;
 
 logical_expr
-   : relational_expr ( 'and' relational_expr)*
+   : relational_expr ( 'and' relational_expr )*
    ;
 
 relational_expr
-   : canca_expr ( ( GT | GTEQ | EQ )  canca_expr)* 
+   : conca_expr ( ( GT | GTEQ | EQ ) conca_expr )*
    ;
 
-canca_expr
+conca_expr
    : add_sub_expr ( '&' add_sub_expr )*
    ;
 
@@ -148,16 +156,16 @@ add_sub_expr
 
 mul_div_expr
    : term ( ( MUL | DIV ) term )*
+   | unary_expr
    ;
 
-
-
 unary_expr
-   : ( MINUS | PLUS | NOT)
+   : ( MINUS | PLUS | NOT) term
+   | method_new_expr
    ;
 
 method_new_expr
-   : ( POINT | NEW )
+   : ( POINT | NEW ) term
    ;
 
 term
@@ -169,6 +177,12 @@ term
    | NULL
    | ME
    ;
+
+
+
+
+
+
 
 
 
