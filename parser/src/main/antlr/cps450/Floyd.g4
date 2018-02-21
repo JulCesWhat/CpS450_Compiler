@@ -132,6 +132,7 @@ expression_list
 
 expression
    : binary_expr
+   | LPAREN binary_expr RPAREN
    ;
 
 binary_expr
