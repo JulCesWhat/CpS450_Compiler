@@ -6,7 +6,7 @@ program
    ;
 
 start
-   : ENDOFLINE_1* class_N ( ENDOFLINE_1* class_N )* ENDOFLINE_1*
+   : ENDOFLINE_1* class_N ( ENDOFLINE_1+ class_N )* ENDOFLINE_1*
    ;
 
 
@@ -53,7 +53,7 @@ type
    | STRING
    | BOOLEAN
    | IDENTIFIER
-   | type LBRACK (expression)? RBRACK
+   | type LBRACK expression RBRACK
    ;
 
 
@@ -91,7 +91,7 @@ loop_stmt
 
 
 call_stmt
-   : ( expression POINT )? IDENTIFIER LPAREN ( expression_list )? RPAREN
+   : ( expression POINT )? IDENTIFIER LPAREN ( expression )? RPAREN
    ;
 
 
@@ -101,64 +101,85 @@ expression_list
 
 
 expression
-   : IDENTIFIER
+   : or_expr
+   ;
+
+or_expr
+   : and_expr ( OR and_expr )*
+   ;
+
+and_expr
+   : relational_expr ( AND relational_expr )*
+   ;
+
+relational_expr
+   : string_expr ( relational_op string_expr )?
+   ;
+
+string_expr
+   : add_sub_expr ( SIGNAND add_sub_expr )*
+   ;
+
+add_sub_expr
+   : mul_div_expr ( add_sub_op mul_div_expr )*
+   ;
+
+mul_div_expr
+   : unary_expr ( mul_div_op unary_expr )*
+   ;
+
+unary_expr
+   : unary_op method_new_expr
+   | method_new_expr
+   ;
+   
+method_new_expr
+   : NEW type
+   | primary_expr POINT IDENTIFIER LPAREN expression_list? RPAREN
+   | IDENTIFIER LPAREN expression_list? RPAREN
+   | primary_expr
+   ;
+
+primary_expr
+   : IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )
+   | IDENTIFIER
    | STRING_LITERAL
    | INTEGER_LITERAL
    | TRUE
    | FALSE
    | NULL
    | ME
-   | NEW type
-   | expression binary_op expression
-   | unary_op expression
    | LPAREN expression RPAREN
-   | IDENTIFIER LPAREN ( expression_list )? RPAREN
-   | expression POINT IDENTIFIER LPAREN ( expression_list )? RPAREN
-   | IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )*
    ;
 
 
-binary_op
-   : 'or' | 'and' | '=' | '>' | '>=' | '&' | '+' | '-' | '*' | '/'
-   ;
+relational_op
+    : EQ
+    | GT
+    | GTEQ
+    ;
 
+// MIGHT BE USEFUL SOMETIME IN THE FUTURE.
+// method_new_op
+//     : POINT
+//     | NEW
+//     ;
 
 unary_op
-   : '-' | '+' | 'not'
-   ;
+    : MINUS
+    | PLUS
+    | NOT
+    ;
 
-// equality
-//    : comparison ( ( '=' ) comparison )* 
-//    ;
+add_sub_op
+    : MINUS
+    | PLUS
+    ;
 
-// comparison
-//    : addition ( ( '>' | '>=' ) addition )*
-//    ;
-
-
-// addition
-//    : multiplication ( ( '-' | '+' ) multiplication )*
-//    ;
-
-
-// multiplication
-//    : unary_op ( ( '/' | '*' ) unary_op )*
-//    ;
-
-
-// unary_op
-//    : ( '-' | '+' | 'not' ) unary_op
-//    | primary
-//    ;
-
-// primary
-//    : STRING_LITERAL
-//    | INTEGER_LITERAL
-//    | TRUE
-//    | FALSE
-//    | NULL
-//    | LPAREN expression RPAREN
-//    ;
+mul_div_op
+    : MUL
+    | DIV
+    ;
 
 
 
@@ -171,16 +192,9 @@ unary_op
 
 
 
-
-
-
-
-
-
-
-
-
-
+AND
+  : 'and'
+  ;
 
 BOOLEAN
    : 'boolean'
@@ -258,6 +272,11 @@ NOT
 
 NULL
    : 'null'
+   ;
+
+
+OR 
+   : 'or'
    ;
 
 
@@ -373,12 +392,12 @@ fragment OCTAL
 //     : AND | SIGN | TIMES | DIV | GT | GTEQ | EQ
 //     ;
 
-AND
+SIGNAND
    : '&'
    ;
 
 
-ADD
+PLUS
    : '+'
    ;
 

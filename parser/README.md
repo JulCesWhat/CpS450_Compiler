@@ -19,7 +19,7 @@ gradlew test
 To run this project, execute:
 
 ```
-build\install\parser\bin\parser.bat cptestok.floyd
+build\install\parser\bin\parser.bat example.floyd
 ```
 
 ## Project Structure
