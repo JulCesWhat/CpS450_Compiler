@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 
-public class MyTinyErrorListener extends ConsoleErrorListener {
+public class MyFloydErrorListener extends ConsoleErrorListener {
 
 	@Override
 	public void syntaxError(Recognizer<?, ?> recognizer,

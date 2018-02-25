@@ -3,11 +3,11 @@ package cps450;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
 
-public class MyTinyLexer extends TinyLexer {
+public class MyFloydLexer extends FloydLexer {
 	
 	boolean dumpTokens;
 
-	public MyTinyLexer(CharStream input, boolean dumpTokens) {
+	public MyFloydLexer(CharStream input, boolean dumpTokens) {
 		super(input);
 		this.dumpTokens = dumpTokens;
 	}
