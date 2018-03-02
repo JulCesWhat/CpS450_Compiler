@@ -14,7 +14,7 @@ gradlew install
 To run this project, execute:
 
 ```
-build/install/interpreter/bin/interpreter -ds -dp program.tiny
+build/install/interpreter/bin/interpreter -ds -dp demo.floyd
 ```
 
 ## Project Structure

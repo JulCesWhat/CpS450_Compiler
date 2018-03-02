@@ -34,7 +34,7 @@ public class Main
 
     }
 
-    public static void doLogic(Options option) throws IOException {
+    public static void doLogic(Options options) throws IOException {
         CharStream input = CharStreams.fromFileName(options.getFilenames().get(0));
         MyFloydLexer lexer = new MyFloydLexer(input, options.getScanner());
         CommonTokenStream tokens = new CommonTokenStream(lexer);

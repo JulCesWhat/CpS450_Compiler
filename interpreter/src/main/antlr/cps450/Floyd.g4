@@ -2,10 +2,6 @@ grammar Floyd;
 
 
 program
-   : start
-   ;
-
-start
    : ENDOFLINE_1* class_N ( ENDOFLINE_1+ class_N )* ENDOFLINE_1*
    ;
 
@@ -336,14 +332,14 @@ STRING_LITERAL
    ;
 
 
-ILLIGAL_STRING_LITERAL
-   : '"' (~["\\\t?\n] | '\\'~[VALID_ESCAPE_SEQUENCES])* '"'
-   ;
+// ILLIGAL_STRING_LITERAL
+//    : '"' (~["\\\t?\n] | '\\'~[VALID_ESCAPE_SEQUENCES])* '"'
+//    ;
 
 
-UNREQ_STRING_LITERAL
-   : '"' (~["\\\t?\n] | '\\'VALID_ESCAPE_SEQUENCES)*
-   ;
+// UNREQ_STRING_LITERAL
+//    : '"' (~["\\\t?\n] | '\\'VALID_ESCAPE_SEQUENCES)*
+//    ;
 
 
 fragment VALID_ESCAPE_SEQUENCES
@@ -502,6 +498,16 @@ ENDOFLINE_2
 WS
    : [ \t] + -> skip
    ;
+
+   
+ILLIGAL_STRING_LITERAL
+    : '"' ~[\r\n]*? '"'
+    ;
+    
+UNREQ_STRING_LITERAL
+    : '"' ~[\r\n"]*
+    ;
+
 
 UNREQ_CHAR
    : (~[\r?\n])
