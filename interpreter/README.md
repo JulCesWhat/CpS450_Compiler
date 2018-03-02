@@ -14,7 +14,7 @@ gradlew install
 To run this project, execute:
 
 ```
-build/install/interpreter/bin/interpreter -ds -dp demo.floyd
+build\install\interpreter\bin\interpreter.bat -ds -dp demo.floyd
 ```
 
 ## Project Structure
