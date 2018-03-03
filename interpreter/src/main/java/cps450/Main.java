@@ -51,7 +51,7 @@ public class Main
         if (parser.getNumberOfSyntaxErrors() > 0)        
         	System.out.println(parser.getNumberOfSyntaxErrors() + " syntax error(s)");
         else {
-        	// System.out.println("Walking tree with MyTinyListenerDemo...");
+        	 System.out.println("Walking tree with MyTinyListenerDemo...");
         	// ParseTreeWalker.DEFAULT.walk(new MyTinyListenerDemo(), tree);
         	// System.out.println("Walking tree with TinyInterpreter...");
         	// ParseTreeWalker.DEFAULT.walk(new TinyInterpreter(), tree);
