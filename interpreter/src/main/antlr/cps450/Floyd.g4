@@ -67,7 +67,7 @@ statement
 
 
 assignment_stmt
-   : IDENTIFIER ( LBRACK expression RBRACK )* ASGOP expression
+   : IDENTIFIER ( LBRACK e1=expression RBRACK )* ASGOP e2=expression
    ;
 
 
@@ -96,56 +96,56 @@ expression_list
    ;
 
 
-expression
+expression returns [Type value]
    : or_expr
    ;
 
-or_expr
+or_expr returns [Type value]
    : and_expr ( OR and_expr )*
    ;
 
-and_expr
+and_expr returns [Type value]
    : relational_expr ( AND relational_expr )*
    ;
 
-relational_expr
+relational_expr returns [Type value]
    : string_expr ( relational_op string_expr )?
    ;
 
-string_expr
+string_expr returns [Type value]
    : add_sub_expr ( SIGNAND add_sub_expr )*
    ;
 
-add_sub_expr
+add_sub_expr returns [Type value]
    : mul_div_expr ( add_sub_op mul_div_expr )*
    ;
 
-mul_div_expr
+mul_div_expr returns [Type value]
    : unary_expr ( mul_div_op unary_expr )*
    ;
 
-unary_expr
+unary_expr returns [Type value]
    : unary_op method_new_expr
    | method_new_expr
    ;
    
-method_new_expr
+method_new_expr returns [Type value]
    : NEW type
    | primary_expr POINT IDENTIFIER LPAREN expression_list? RPAREN
    | IDENTIFIER LPAREN expression_list? RPAREN
    | primary_expr
    ;
 
-primary_expr
-   : IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )
-   | IDENTIFIER
-   | STRING_LITERAL
-   | INTEGER_LITERAL
-   | TRUE
-   | FALSE
-   | NULL
-   | ME
-   | LPAREN expression RPAREN
+primary_expr returns [Type value]
+   : IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )		# ArrayExpr
+   | IDENTIFIER			# IdTerm
+   | STRING_LITERAL		# StrExpr
+   | INTEGER_LITERAL	# IntExpr
+   | TRUE				# TrueExpr
+   | FALSE				# FalseExpr
+   | NULL				# NullExpr
+   | ME					# MeExpr
+   | LPAREN expression RPAREN		# ParExpr
    ;
 
 

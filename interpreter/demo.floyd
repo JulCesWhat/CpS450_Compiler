@@ -1,20 +1,20 @@
-~ Test1.floyd
-class Main is 
-  ~ Attributes
-  r1: string := ""
-  y := 3
+~
+~ decls1.floyd
+~ - No errors, no arrays
+~
+
+class test1 is
+                              
+  x: int                   ~ DEFINE x: int 
+  y: boolean               ~ DEFINE y: boolean
+  z: int
 
   start() is
   begin
-    loop while s.equals("")
-      out.write("Hey, \"Sue!\"")
-      s := in.readline()
-      if not s.equals("") then 
-        out.write(s)
-      end if
-      y := y + 1 * 2 / (56 + 2) - 3
-      out.write((s & "This is a test.").cat("Hey"))
-    end loop
-  end start
+    x := 3                     ~ REFERENCE x: int 
+    z := x - 1                 ~ REFERENCE z: int ; REFERENCE x: int
 
-end Main
+    y := true                  ~ REFERENCE y: boolean
+  end start
+  
+end test1

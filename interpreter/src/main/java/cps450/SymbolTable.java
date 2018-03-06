@@ -1,59 +1,58 @@
 package cps450;
-import java.util.*;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 
-public class SymbolTable {
+public final class SymbolTable {
 	
-	private Stack<Symbol> stStack;
+	private static SymbolTable sbInstance = null;
+	public HashMap<String, ArrayList<Symbol>> symbolHM = null;
 	private int scope;
 	
 	
-	public SymbolTable() {
-		this.stStack = new Stack<>();
+	protected SymbolTable() {
+		this.symbolHM = new HashMap<>();
 		this.scope = 0;
 	}
-	
-	public Stack<Symbol> getStStack() {
-		return stStack;
+
+	public static SymbolTable getInstance() {
+		if (sbInstance == null) {
+			sbInstance = new SymbolTable();
+		}
+		return sbInstance;
 	}
-
-/*	public void setStStack(Stack<Symbol> stStack) {
-		this.stStack = stStack;
-	}*/
-
+	
 	public int getScope() {
 		return scope;
 	}
-
-/*	public void setScope(int scope) {
-		this.scope = scope;
-	}*/
 	
 	public Symbol push(String name,Declaration decl) {
 		Symbol newSymbol = new Symbol(this.scope, name, decl);
-		stStack.push(newSymbol);
+		String stScope = Integer.toString(this.scope);
+		
+		symbolHM.putIfAbsent(stScope, new ArrayList<Symbol>());
+		symbolHM.get(stScope).add(newSymbol);
+		
 		return newSymbol;
 	}
 	
+	
+	//Looks up for a symbol 
 	public Symbol lookup(String name) {
-		Stack<Symbol> localStack = new Stack<>();
-		Symbol newSymbol = null;
 		
-		for(int i = this.stStack.size(); i > -1; i--) {
-			newSymbol = this.stStack.pop();
-			localStack.push(newSymbol);
-			if(newSymbol.getName().equals(name)) {
-				i = -1;
+		for(int i = this.scope; i > -1; i--) {
+			if(symbolHM.containsKey(Integer.toString(i))) {
+				ArrayList<Symbol> symbolList = symbolHM.get(Integer.toString(i));
+				for(int j = symbolList.size() -1; -1 < j; j--) {
+					Symbol extSymbol = symbolList.get(j);
+					if(extSymbol.getName().equals(name)) {
+						return extSymbol;
+					}
+				}	
 			}
-			newSymbol = null;
 		}
 		
-		for(int i = localStack.size(); i > -1; i--) {
-			newSymbol = localStack.pop();
-			this.stStack.push(newSymbol);
-		}
-		
-		return newSymbol;
+		return null;
 	}
 	
 	public void beginScope() {
@@ -66,14 +65,13 @@ public class SymbolTable {
 			throw new Exception("Error! Scope is 0.");
 		}
 		
-		for(int i = this.stStack.size(); i > -1; i--) {
-			Symbol newSymbol = this.stStack.pop();
-
-			if(newSymbol.getScope() != this.scope) {
-				i = -1;
-				this.stStack.push(newSymbol);
-			}
+		String strScope = Integer.toString(this.scope);
+		
+		if(symbolHM.containsKey(strScope)) {
+			symbolHM.remove(strScope);
 		}
+		this.scope--;
+		
 	}
 
 }

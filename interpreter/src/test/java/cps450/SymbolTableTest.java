@@ -1,6 +1,6 @@
 package cps450;
 
-import static org.junit.Assert.*;
+//import static org.junit.Assert.*;
 import org.junit.Test;
 import junit.framework.TestCase;
 
@@ -11,12 +11,43 @@ public class SymbolTableTest extends TestCase {
 		fail("Not yet implemented");
 	}*/
 
-	public void testSymbolTable() {
-		SymbolTable table = new SymbolTable();
+	@Test
+	public void testSymbolTable() throws Exception {
+		
+		SymbolTable table = SymbolTable.getInstance();
 
-		Symbol s = table.push("x", new VarDecl(Type.INT));
-		assertTrue(s.getName().equals("x"));
-		// ...
+		Symbol s = table.push("s", new VarDecl(Type.INT));
+		assertTrue(s.getName().equals("s"));
+		
+		table.beginScope();
+		assertTrue(table.getScope() == 1);
+		
+		Symbol x = table.push("x", new VarDecl(Type.INT));
+		Symbol y = table.push("y", new VarDecl(Type.INT));
+		
+		Symbol foundX = table.lookup("x");
+		assertNotNull(foundX);
+		
+		table.beginScope();
+		assertTrue(table.getScope() == 2);
+		
+		Symbol z = table.push("z", new VarDecl(Type.STRING));
+		
+		table.endScope();
+		
+		assertEquals(1, table.getScope());
+		
+		Symbol foundY = table.lookup("y");
+		assertNotNull(foundY);
+		assertTrue(foundY.getName().equals("y"));
+		
+		table.endScope();
+		
+		assertEquals(0, table.getScope());
+		
+		Symbol foundS = table.lookup("s");
+		assertNotNull(foundS);
+		assertTrue(foundS.getName().equals("s"));
 	}
 
 }

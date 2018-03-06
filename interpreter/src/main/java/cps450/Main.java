@@ -9,12 +9,13 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ConsoleErrorListener;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import java.util.ArrayList;
+//import org.antlr.v4.runtime.tree.ParseTreeWalker;
+//import java.util.ArrayList;
 
 
 public class Main
 {
+
     public static void main(String[] arguments) throws IOException {
         if(arguments.length == 0)
         {
@@ -35,6 +36,7 @@ public class Main
     }
 
     public static void doLogic(Options options) throws IOException {
+
         CharStream input = CharStreams.fromFileName(options.getFilenames().get(0));
         MyFloydLexer lexer = new MyFloydLexer(input, options.getScanner());
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -51,12 +53,12 @@ public class Main
         if (parser.getNumberOfSyntaxErrors() > 0)        
         	System.out.println(parser.getNumberOfSyntaxErrors() + " syntax error(s)");
         else {
-        	 System.out.println("Walking tree with MyTinyListenerDemo...");
+        	// System.out.println("Walking tree with MyTinyListenerDemo...");
         	// ParseTreeWalker.DEFAULT.walk(new MyTinyListenerDemo(), tree);
         	// System.out.println("Walking tree with TinyInterpreter...");
         	// ParseTreeWalker.DEFAULT.walk(new TinyInterpreter(), tree);
-        	// System.out.println("Walking tree with TinyInterpreterVisitor...");
-        	// new TinyInterpreterVisitor().visit(tree);
+        	System.out.println("Walking tree with SemanticChecker...");
+        	new SemanticChecker().visit(tree);
         }
         
         if (options.getParser())
