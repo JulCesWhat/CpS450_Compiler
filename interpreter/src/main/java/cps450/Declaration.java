@@ -1,10 +1,9 @@
 package cps450;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 
 class Declaration {
 	public Type type; // all symbols have a Type
-	
 	
 }
 
@@ -17,24 +16,24 @@ class VarDecl extends Declaration {
 
 class MethodDecl extends Declaration {
 	// more will go here eventually ...
-	public ArrayList<VarDecl> localVars;
-	public ArrayList<VarDecl> parameters;
+	public HashMap<String, VarDecl> localVars;
+	public HashMap<String, VarDecl> parameters;
 	
 	public MethodDecl(Type newType) {
 		super.type = newType;
-		this.localVars = new ArrayList<>();
-		this.parameters = new ArrayList<>();
+		this.localVars = new HashMap<>();
+		this.parameters = new HashMap<>();
 	}
 }
 
 class ClassDecl extends Declaration {
 	// more will go here eventually ...
-	public ArrayList<MethodDecl> methods;
-	public ArrayList<VarDecl> glovalVars;
+	public HashMap<String, MethodDecl> methods;
+	public HashMap<String, VarDecl> glovalVars;
 	
 	public ClassDecl(Type newType) {
 		super.type = newType;
-		this.methods = new ArrayList<>();
-		this.glovalVars = new ArrayList<>();
+		this.methods = new HashMap<>();
+		this.glovalVars = new HashMap<>();
 	}
 }

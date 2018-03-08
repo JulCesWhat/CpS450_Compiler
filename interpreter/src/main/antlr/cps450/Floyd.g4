@@ -93,7 +93,7 @@ call_stmt
 
 
 expression_list
-   : ( expression COMMA )* expression
+   : ( expr+=expression COMMA )* expr+=expression
    ;
 
 
@@ -102,27 +102,27 @@ expression
    ;
 
 or_expr
-   : and_expr ( OR and_expr )*
+   : andExpr+=and_expr ( OR andExpr+=and_expr )*
    ;
 
 and_expr
-   : relational_expr ( AND relational_expr )*
+   : relExpr+=relational_expr ( AND relExpr+=relational_expr )*
    ;
 
 relational_expr
-   : string_expr ( relational_op string_expr )?
+   : strExpr+=string_expr ( relational_op strExpr+=string_expr )?
    ;
 
 string_expr
-   : add_sub_expr ( SIGNAND add_sub_expr )*
+   : asExpr+=add_sub_expr ( SIGNAND asExpr+=add_sub_expr )*
    ;
 
 add_sub_expr
-   : mul_div_expr ( add_sub_op mul_div_expr )*
+   : mdExpr+=mul_div_expr ( add_sub_op mdExpr+=mul_div_expr )*
    ;
 
 mul_div_expr
-   : unary_expr ( mul_div_op unary_expr )*
+   : unaExpr+=unary_expr ( mul_div_op unaExpr+=unary_expr )*
    ;
 
 unary_expr
@@ -131,21 +131,21 @@ unary_expr
    ;
    
 method_new_expr
-   : NEW type
-   | primary_expr POINT IDENTIFIER LPAREN expression_list? RPAREN
-   | IDENTIFIER LPAREN expression_list? RPAREN
-   | primary_expr
+   : NEW type															#NewExpr
+   | primary_expr POINT IDENTIFIER LPAREN expression_list? RPAREN		#PointMethExpr
+   | IDENTIFIER LPAREN expression_list? RPAREN							#MethExpr
+   | primary_expr														#PrimExpr
    ;
 
 primary_expr
    : IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )		# ArrayExpr
-   | IDENTIFIER			# IdTerm
-   | STRING_LITERAL		# StrExpr
-   | INTEGER_LITERAL	# IntExpr
-   | TRUE				# TrueExpr
-   | FALSE				# FalseExpr
-   | NULL				# NullExpr
-   | ME					# MeExpr
+   | IDENTIFIER				# IdTerm
+   | STRING_LITERAL			# StrExpr
+   | INTEGER_LITERAL		# IntExpr
+   | TRUE					# TrueExpr
+   | FALSE					# FalseExpr
+   | NULL					# NullExpr
+   | ME						# MeExpr
    | LPAREN expression RPAREN		# ParExpr
    ;
 
