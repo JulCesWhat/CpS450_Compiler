@@ -64,7 +64,8 @@ public class Main
         if (options.getParser())
         	// Display graphical tree
         	Trees.inspect(tree, parser);
-
+        
+        System.out.println("Finished doing the tree.");
     }
 
 }

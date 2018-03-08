@@ -6,12 +6,12 @@ import java.util.ArrayList;
 public final class SymbolTable {
 	
 	private static SymbolTable sbInstance = null;
-	public HashMap<String, ArrayList<Symbol>> symbolHM = null;
+	public ArrayList<HashMap<String, Symbol>> symbolAL = null;
 	private int scope;
 	
 	
 	protected SymbolTable() {
-		this.symbolHM = new HashMap<>();
+		this.symbolAL = new ArrayList<>();
 		this.scope = 0;
 	}
 
@@ -26,12 +26,16 @@ public final class SymbolTable {
 		return scope;
 	}
 	
-	public Symbol push(String name,Declaration decl) {
+	public Symbol push(String name, Declaration decl) {
 		Symbol newSymbol = new Symbol(this.scope, name, decl);
-		String stScope = Integer.toString(this.scope);
 		
-		symbolHM.putIfAbsent(stScope, new ArrayList<Symbol>());
-		symbolHM.get(stScope).add(newSymbol);
+		if(symbolAL.size() -1 >= this.scope) {
+			symbolAL.get(this.scope).put(name, newSymbol);
+		} {
+			HashMap<String, Symbol> localHM = new HashMap<>();
+			localHM.put(name, newSymbol);
+			symbolAL.add(localHM);
+		}
 		
 		return newSymbol;
 	}
@@ -40,15 +44,9 @@ public final class SymbolTable {
 	//Looks up for a symbol 
 	public Symbol lookup(String name) {
 		
-		for(int i = this.scope; i > -1; i--) {
-			if(symbolHM.containsKey(Integer.toString(i))) {
-				ArrayList<Symbol> symbolList = symbolHM.get(Integer.toString(i));
-				for(int j = symbolList.size() -1; -1 < j; j--) {
-					Symbol extSymbol = symbolList.get(j);
-					if(extSymbol.getName().equals(name)) {
-						return extSymbol;
-					}
-				}	
+		for(int i = symbolAL.size() -1; i > -1; i--) {
+			if(symbolAL.get(i).containsKey(name)) {
+				return symbolAL.get(i).get(name);
 			}
 		}
 		
@@ -65,11 +63,10 @@ public final class SymbolTable {
 			throw new Exception("Error! Scope is 0.");
 		}
 		
-		String strScope = Integer.toString(this.scope);
-		
-		if(symbolHM.containsKey(strScope)) {
-			symbolHM.remove(strScope);
+		if(symbolAL.size() -1 >= this.scope) {
+			symbolAL.remove(this.scope);
 		}
+		
 		this.scope--;
 		
 	}

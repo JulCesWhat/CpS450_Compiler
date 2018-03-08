@@ -3,7 +3,7 @@ package cps450;
 import java.util.ArrayList;
 
 class Declaration {
-	Type type; // all symbols have a Type
+	public Type type; // all symbols have a Type
 	
 	
 }
@@ -17,12 +17,24 @@ class VarDecl extends Declaration {
 
 class MethodDecl extends Declaration {
 	// more will go here eventually ...
-	ArrayList<VarDecl> localVar = new ArrayList<>();
-	ArrayList<VarDecl> parameters = new ArrayList<>();
+	public ArrayList<VarDecl> localVars;
+	public ArrayList<VarDecl> parameters;
+	
+	public MethodDecl(Type newType) {
+		super.type = newType;
+		this.localVars = new ArrayList<>();
+		this.parameters = new ArrayList<>();
+	}
 }
 
 class ClassDecl extends Declaration {
 	// more will go here eventually ...
-	ArrayList<MethodDecl> methods = new ArrayList<>();
-	ArrayList<VarDecl> glovalVar = new ArrayList<>();
+	public ArrayList<MethodDecl> methods;
+	public ArrayList<VarDecl> glovalVars;
+	
+	public ClassDecl(Type newType) {
+		super.type = newType;
+		this.methods = new ArrayList<>();
+		this.glovalVars = new ArrayList<>();
+	}
 }

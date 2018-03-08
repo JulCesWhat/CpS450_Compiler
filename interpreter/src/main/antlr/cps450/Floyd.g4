@@ -1,18 +1,19 @@
 grammar Floyd;
 
 
+
 program
-   : ENDOFLINE_1* class_N ( ENDOFLINE_1+ class_N )* ENDOFLINE_1*
+   : ENDOFLINE_1* classes+=class_decl ( ENDOFLINE_1+ classes+=class_decl )* ENDOFLINE_1*
    ;
 
 
 //class
 
-class_N
-   : CLASS IDENTIFIER ( INHERITS FROM IDENTIFIER )? IS ENDOFLINE_1+
-     var_decl*
-     method_decl*
-     END IDENTIFIER
+class_decl
+   : CLASS idS=IDENTIFIER ( INHERITS FROM idI=IDENTIFIER )? IS ENDOFLINE_1+
+     claVarDecs+=var_decl*
+     claMetDecs+=method_decl*
+     END idE=IDENTIFIER
    ;
 
 
@@ -27,7 +28,7 @@ var_decl
 
 method_decl
    : IDENTIFIER LPAREN (argument_decl_list)? RPAREN ( COLON type )? IS ENDOFLINE_1+
-     var_decl*
+     metVarDecs+=var_decl*
      BEGIN ENDOFLINE_1+
      statement_list
      END IDENTIFIER ENDOFLINE_1+
@@ -35,7 +36,7 @@ method_decl
 
 
 argument_decl_list
-   : ( argument_decl SEMICOL )* argument_decl
+   : ( argsDec+=argument_decl SEMICOL )* argsDec+=argument_decl
    ;
 
 
@@ -45,16 +46,16 @@ argument_decl
 
 
 type
-   : INT
-   | STRING
-   | BOOLEAN
-   | IDENTIFIER
-   | type LBRACK expression RBRACK
+   : INT								# IntType
+   | STRING								# StrType
+   | BOOLEAN							# BoolType
+   | IDENTIFIER							# IdType
+   | type LBRACK expression RBRACK		# ExpType
    ;
 
 
 statement_list
-   : ( statement ENDOFLINE_1+ )*
+   : ( stmts+=statement ENDOFLINE_1+ )*
    ;
 
 
@@ -96,47 +97,47 @@ expression_list
    ;
 
 
-expression returns [Type value]
+expression
    : or_expr
    ;
 
-or_expr returns [Type value]
+or_expr
    : and_expr ( OR and_expr )*
    ;
 
-and_expr returns [Type value]
+and_expr
    : relational_expr ( AND relational_expr )*
    ;
 
-relational_expr returns [Type value]
+relational_expr
    : string_expr ( relational_op string_expr )?
    ;
 
-string_expr returns [Type value]
+string_expr
    : add_sub_expr ( SIGNAND add_sub_expr )*
    ;
 
-add_sub_expr returns [Type value]
+add_sub_expr
    : mul_div_expr ( add_sub_op mul_div_expr )*
    ;
 
-mul_div_expr returns [Type value]
+mul_div_expr
    : unary_expr ( mul_div_op unary_expr )*
    ;
 
-unary_expr returns [Type value]
+unary_expr
    : unary_op method_new_expr
    | method_new_expr
    ;
    
-method_new_expr returns [Type value]
+method_new_expr
    : NEW type
    | primary_expr POINT IDENTIFIER LPAREN expression_list? RPAREN
    | IDENTIFIER LPAREN expression_list? RPAREN
    | primary_expr
    ;
 
-primary_expr returns [Type value]
+primary_expr
    : IDENTIFIER LBRACK expression RBRACK ( LBRACK expression RBRACK )		# ArrayExpr
    | IDENTIFIER			# IdTerm
    | STRING_LITERAL		# StrExpr
