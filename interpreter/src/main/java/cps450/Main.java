@@ -58,7 +58,7 @@ public class Main
         	// System.out.println("Walking tree with TinyInterpreter...");
         	// ParseTreeWalker.DEFAULT.walk(new TinyInterpreter(), tree);
         	System.out.println("Walking tree with SemanticChecker...");
-        	new SemanticChecker().visit(tree);
+        	new SemanticChecker(options.getFilenames().get(0)).visit(tree);
         }
         
         if (options.getParser())

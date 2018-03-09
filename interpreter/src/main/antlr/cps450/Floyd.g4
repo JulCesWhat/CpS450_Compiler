@@ -10,10 +10,10 @@ program
 //class
 
 class_decl
-   : CLASS idS=IDENTIFIER ( INHERITS FROM idI=IDENTIFIER )? IS ENDOFLINE_1+
+   : CLASS idClS=IDENTIFIER ( INHERITS FROM idClIn=IDENTIFIER )? IS ENDOFLINE_1+
      claVarDecs+=var_decl*
      claMetDecs+=method_decl*
-     END idE=IDENTIFIER
+     END idClE=IDENTIFIER
    ;
 
 
@@ -27,11 +27,11 @@ var_decl
 //method declaration
 
 method_decl
-   : IDENTIFIER LPAREN (argument_decl_list)? RPAREN ( COLON type )? IS ENDOFLINE_1+
+   : idMeS=IDENTIFIER LPAREN (argument_decl_list)? RPAREN ( COLON type )? IS ENDOFLINE_1+
      metVarDecs+=var_decl*
      BEGIN ENDOFLINE_1+
      statement_list
-     END IDENTIFIER ENDOFLINE_1+
+     END idMeE=IDENTIFIER ENDOFLINE_1+
    ;
 
 

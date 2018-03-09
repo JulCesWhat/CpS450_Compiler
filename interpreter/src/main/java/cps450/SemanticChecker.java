@@ -1,7 +1,6 @@
 package cps450;
 
 import java.util.HashMap;
-
 import org.antlr.v4.runtime.Token;
 
 
@@ -9,9 +8,11 @@ import org.antlr.v4.runtime.Token;
 public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	SymbolTable sblTable;
+	String fileName;
 	
-	public SemanticChecker() {
+	public SemanticChecker(String newFileName) {
 		this.sblTable = SymbolTable.getInstance();
+		this.fileName = newFileName;
 	}
 	
 	@Override
@@ -29,16 +30,11 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	@Override
   	public Type visitClass_decl(FloydParser.Class_declContext ctx) {
   		
-  		//System.out.println(ctx.idS + "  " + ctx.idE);
-  		Token idS = ctx.idS;
-  		Token idE = ctx.idE;
-  		Token idI = ctx.idI;
-  		
-  		if(idI != null) {
-  			System.out.println("Inheritance unsupported feature");
-  		} else if(!idS.getText().equals(idE.getText())) {
+  		if(ctx.idClIn != null) {
+  			this.printErrorNT(ctx.idClIn.getLine(), ctx.idClIn.getCharPositionInLine(), "feature unsupported");
+  		} else if(!ctx.idClS.getText().equals(ctx.idClE.getText())) {
   			System.out.println("failure to define exactly one class in a source file capi");
-  		} else if(idS.getText() == "int" || idS.getText() == "string" || idS.getText() == "boolean") {
+  		} else if(ctx.idClS.getText() == "int" || ctx.idClS.getText() == "string" || ctx.idClS.getText() == "boolean") {
   			System.out.println("failure to define class that is not a type");
   		} else {
   			for (FloydParser.Var_declContext varDecl : ctx.claVarDecs) {
@@ -57,13 +53,22 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	@Override
 	public Type visitVar_decl(FloydParser.Var_declContext ctx) {
   		
+  		String varName = ctx.IDENTIFIER().getText();
 		if(ctx.COLON() != null) {
-			Type newType = visit(ctx.type());
-			Symbol newSymbol = sblTable.push(ctx.IDENTIFIER().getText(), new VarDecl(newType));
+			int curScope = this.sblTable.getScope();		
+			
+			if(this.sblTable.lookupInScope(varName, curScope)) {
+				Token tok = (Token) ctx.IDENTIFIER().getPayload();
+				this.printError(tok, "Redefined identifier " + varName);
+			} else {
+				Type newType = visit(ctx.type());
+				Symbol newSymbol = this.sblTable.push(varName, new VarDecl(newType));
+			}
 		}
 		
-		if(ctx.ASGOP() != null) {
-			System.out.println("Immediate initialization unsupported feature");
+		if(ctx.ASGOP() != null && this.sblTable.getScope() == 0) {
+			Token tok = (Token) ctx.ASGOP().getPayload();
+			this.printError(tok, "feature unsupported");
 		}
 		
 		return null;
@@ -73,6 +78,13 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	@Override
   	public Type visitMethod_decl(FloydParser.Method_declContext ctx) {
   		this.sblTable.beginScope();
+  		
+  		if(!(ctx.idMeS.getText()).equals(ctx.idMeE.getText())) {
+  			System.out.println("Method not declared correctly");
+  		} else if(!(ctx.idMeS.getText()).equals("start")) {
+  			this.printErrorNT(ctx.idMeS.getLine(), ctx.idMeE.getCharPositionInLine(), "feature unsupported");
+  		}
+  		
   		
   		if(ctx.argument_decl_list() != null) {
   	  		for (FloydParser.Argument_declContext argsDecl : ctx.argument_decl_list().argsDec) {
@@ -85,8 +97,10 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		}
   		
   		if(ctx.statement_list() != null) {
+  			
   	  		for (FloydParser.StatementContext metStmtDecl : ctx.statement_list().stmts) {
   				Type newType = visit(metStmtDecl);
+
   	  		}
   		}
   		
@@ -112,7 +126,8 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 
 	@Override
 	public Type visitStrType(FloydParser.StrTypeContext ctx) {
-		System.out.println("String ussupported feature.");
+		Token tok = (Token) ctx.getPayload();
+		this.printError(tok, "feature unsupported");
 		return Type.STRING;
 	}
 	
@@ -123,7 +138,8 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitIdType(FloydParser.IdTypeContext ctx) {
-		System.out.println("String feature unsupported.");
+		Token tok = (Token) ctx.getPayload();
+		this.printError(tok, "feature unsupported");
 		return Type.ERROR;
 	}
 	
@@ -132,8 +148,18 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitAssignment_stmt(FloydParser.Assignment_stmtContext ctx) {
 		if(ctx.e1 != null) {
-			System.out.println("Not supported behaviour!");
+			Token tok = (Token) ctx.e1.getPayload();
+			this.printError(tok, "feature unsupported");
 		}
+		
+		String varName = ctx.IDENTIFIER().getText();
+		Symbol newSymbol = this.sblTable.lookup(varName);
+		if(newSymbol == null) {
+			Token newToken = (Token) ctx.IDENTIFIER().getPayload();
+			this.printError(newToken, "Undeclared identifier " + varName);
+		}
+		
+		
 		
 		Type newType = visit(ctx.e2);
 		
@@ -173,13 +199,14 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		
 		Type newType = visit(ctx.or_expr());
 		
-		return null;
+		return newType;
 	}
 	
 	@Override
 	public Type visitOr_expr(FloydParser.Or_exprContext ctx) {
 		Type newType = null;
-		if(ctx.OR() != null) {
+		if(ctx.OR().size() > 0) {
+			
 			for (FloydParser.And_exprContext andExprDecl : ctx.andExpr) {
 				newType = visit(andExprDecl);
 			}
@@ -193,7 +220,8 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitAnd_expr(FloydParser.And_exprContext ctx) {
 		Type newType = null;
-		if(ctx.AND() != null) {
+		if(ctx.AND().size() > 0) {
+			
 			for (FloydParser.Relational_exprContext relExprDecl : ctx.relExpr) {
 				newType = visit(relExprDecl);
 			}
@@ -208,6 +236,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public Type visitRelational_expr(FloydParser.Relational_exprContext ctx) {
 		Type newType = null;
 		if(ctx.relational_op() != null) {
+			
 			for (FloydParser.String_exprContext strExprDecl : ctx.strExpr) {
 				newType = visit(strExprDecl);
 			}
@@ -221,7 +250,8 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitString_expr(FloydParser.String_exprContext ctx) {
 		Type newType = null;
-		if(ctx.SIGNAND() != null) {
+		if(ctx.SIGNAND().size() > 0) {
+			
 			for (FloydParser.Add_sub_exprContext asExprDecl : ctx.asExpr) {
 				newType = visit(asExprDecl);
 			}
@@ -235,9 +265,14 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitAdd_sub_expr(FloydParser.Add_sub_exprContext ctx) {
 		Type newType = null;
-		if(ctx.add_sub_op() != null) {
+		if(ctx.add_sub_op().size() > 0) {
+
 			for (FloydParser.Mul_div_exprContext mdExprDecl : ctx.mdExpr) {
 				newType = visit(mdExprDecl);
+				if(!newType.name.equals("int")) {
+					newType = Type.ERROR;
+					break;
+				}
 			}
 		} else {
 			newType = visit(ctx.mdExpr.get(0));
@@ -250,9 +285,14 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public Type visitMul_div_expr(FloydParser.Mul_div_exprContext ctx) {
 		Type newType = null;
 		
-		if(ctx.mul_div_op() != null) {
+		if(ctx.mul_div_op().size() > 0) {
+			
 			for (FloydParser.Unary_exprContext unaExprDecl : ctx.unaExpr) {
 				newType = visit(unaExprDecl);
+				if(!newType.name.equals("int")) {
+					newType = Type.ERROR;
+					break;
+				}
 			}
 		} else {
 			newType = visit(ctx.unaExpr.get(0));
@@ -272,8 +312,9 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitNewExpr(FloydParser.NewExprContext ctx) {
 		
-		System.out.println("feature unsupported");
-		//Type newType = visit(ctx.type());
+		Token tok = (Token) ctx.getPayload();
+		this.printError(tok, "feature unsupported");
+
 		return Type.ERROR;
 	}
 	
@@ -293,7 +334,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public Type visitPrimExpr(FloydParser.PrimExprContext ctx) {
 		Type newType = visit(ctx.primary_expr());
 
-		return null;
+		return newType;
 	}
 	
 	
@@ -301,22 +342,34 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	//Primay Expression
 	@Override
 	public Type visitArrayExpr(FloydParser.ArrayExprContext ctx) {
-		System.out.println("feature unsupported");
+		Token tok = (Token) ctx.getPayload();
+		this.printError(tok, "feature unsupported");
+		
 		return Type.ERROR;
 	}
 	
 	@Override
 	public Type visitIdTerm(FloydParser.IdTermContext ctx) {
+		Type newType = null;
 		String name = ctx.getText();
+		System.out.println("I am here " + name);
 		Symbol newSymbol = this.sblTable.lookup(name);
-		System.out.println(newSymbol.getName() + " " + newSymbol.getScope());
-		Declaration newDeclaration = newSymbol.getAttributes();
-		return newDeclaration.type;
+		if (newSymbol == null) {
+			System.out.println("Use of undeclared variable " + name);
+			newType = Type.ERROR;
+		} else {
+			Declaration newDeclaration = newSymbol.getAttributes();
+			newType = newDeclaration.type;
+		}
+
+		return newType;
 	}
 	
 	@Override
 	public Type visitStrExpr(FloydParser.StrExprContext ctx) {
-		System.out.println("feature unsupported");
+		Token tok = (Token) ctx.getPayload();
+		this.printError(tok, "feature unsupported");
+		
 		return Type.STRING;
 	}
 	
@@ -340,13 +393,17 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitNullExpr(FloydParser.NullExprContext ctx) {
-		System.out.println("feature unsupported");
+		Token tok = (Token) ctx.getPayload();
+		this.printError(tok, "feature unsupported");
+		
 		return Type.ERROR;
 	}
 	
 	@Override
 	public Type visitMeExpr(FloydParser.MeExprContext ctx) {
-		System.out.println("feature unsupported");
+		Token tok = (Token) ctx.getPayload();
+		this.printError(tok, "feature unsupported");
+		
 		return Type.ERROR;
 	}
 	
@@ -356,4 +413,18 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		return newType;
 	}
 	
+	
+	
+	//Errors
+	public void printError(Token newToken, String error) {
+		int line =  newToken.getLine();
+		int col = newToken.getCharPositionInLine();
+	
+		System.err.println(this.fileName + ":" + line + "," + col + ":" + error);
+	}
+	
+	public void printErrorNT(int line, int col, String error) {
+	
+		System.err.println(this.fileName + ":" + line + "," + col + ":" + error);
+	}
 }

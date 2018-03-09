@@ -53,6 +53,16 @@ public final class SymbolTable {
 		return null;
 	}
 	
+	public boolean lookupInScope(String newName, int newScope) {
+		boolean found = false;
+
+		if(this.symbolAL.size() > 0 && this.symbolAL.get(newScope).containsKey(newName)) {
+			found = true;
+		}
+
+		return found;
+	}
+	
 	public void beginScope() {
 		this.scope++;
 	}
