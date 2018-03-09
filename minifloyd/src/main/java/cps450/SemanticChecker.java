@@ -1,6 +1,8 @@
 package cps450;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.ArrayList;
 import org.antlr.v4.runtime.Token;
 
 
@@ -9,10 +11,14 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	SymbolTable sblTable;
 	String fileName;
+	ClassDecl classDec = null;
+	//HashMap<String, Declaration> methods = new HashMap<>();
 	
 	public SemanticChecker(String newFileName) {
 		this.sblTable = SymbolTable.getInstance();
 		this.fileName = newFileName;
+		
+		//MethodDecl method1 = MethodDecl()
 	}
 	
 	@Override
@@ -37,6 +43,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   		} else if(ctx.idClS.getText() == "int" || ctx.idClS.getText() == "string" || ctx.idClS.getText() == "boolean") {
   			System.out.println("failure to define class that is not a type");
   		} else {
+  			this.classDec = new ClassDecl(ctx.idClS.getText());
   			for (FloydParser.Var_declContext varDecl : ctx.claVarDecs) {
   				Type newType = visit(varDecl);
   			}
@@ -52,16 +59,18 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	
   	@Override
 	public Type visitVar_decl(FloydParser.Var_declContext ctx) {
-  		
+  		Type newType = Type.ERROR;
   		String varName = ctx.IDENTIFIER().getText();
 		if(ctx.COLON() != null) {
-			int curScope = this.sblTable.getScope();		
+			int curScope = this.sblTable.getScope();
 			
 			if(this.sblTable.lookupInScope(varName, curScope)) {
 				Token tok = (Token) ctx.IDENTIFIER().getPayload();
 				this.printError(tok, "Redefined identifier " + varName);
+				
 			} else {
-				Type newType = visit(ctx.type());
+				newType = visit(ctx.type());
+				//System.out.println(varName + " " + curScope);
 				Symbol newSymbol = this.sblTable.push(varName, new VarDecl(newType));
 			}
 		}
@@ -71,7 +80,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 			this.printError(tok, "feature unsupported");
 		}
 		
-		return null;
+		return newType;
 	}
   	
   	
@@ -85,15 +94,31 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   			this.printErrorNT(ctx.idMeS.getLine(), ctx.idMeE.getCharPositionInLine(), "feature unsupported");
   		}
   		
+  		MethodDecl method = new MethodDecl();
   		
   		if(ctx.argument_decl_list() != null) {
   	  		for (FloydParser.Argument_declContext argsDecl : ctx.argument_decl_list().argsDec) {
-  				Type newType = visit(argsDecl);
+  	  			String argName = argsDecl.IDENTIFIER().getText();
+  	  			Symbol sym = this.sblTable.lookup(argName);
+  	  			
+  	  			if(sym == null || sym.getScopeS() < this.sblTable.getScope()) {
+  	  				Type newType = visit(argsDecl);
+  	  				VarDecl var = new VarDecl(newType);
+  	  				method.parameters.put(argName , var);
+  	  			} else {
+  	  				Token tok = (Token) argsDecl.IDENTIFIER().getPayload();
+  	  				String error = "Redefined identifier " + argName;
+  	  				this.printErrorNT(tok.getLine(), tok.getCharPositionInLine(), error);
+  	  			}  			
   	  		}
   		}
   		
   		for (FloydParser.Var_declContext metVarDecl : ctx.metVarDecs) {
 			Type newType = visit(metVarDecl);
+			if(newType != null) {
+				VarDecl var = new VarDecl(newType);
+				method.localVars.put(metVarDecl.IDENTIFIER().getText(), var);	
+			}
 		}
   		
   		if(ctx.statement_list() != null) {
@@ -104,9 +129,15 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	  		}
   		}
   		
-  		
+  		try {
+  	  		this.sblTable.endScope();
+  		} catch(Exception ex){
+  			System.out.println(ex);
+  		}
+
   		return null;
   	}
+  
   	
   	@Override
   	public Type visitArgument_decl(FloydParser.Argument_declContext ctx) {
@@ -180,6 +211,11 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitCall_stmt(FloydParser.Call_stmtContext ctx) {
+		String methName = ctx.IDENTIFIER().getText();
+		if(!this.classDec.methods.containsKey(methName)) {
+			Token tok = (Token) ctx.IDENTIFIER().getPayload();
+			this.printError(tok, "Undefined function " + methName);
+		}
 		
 		return null;
 	}
@@ -234,14 +270,21 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitRelational_expr(FloydParser.Relational_exprContext ctx) {
-		Type newType = null;
+		Type newType = Type.BOOLEAN;
 		if(ctx.relational_op() != null) {
+			Type type1 = visit(ctx.strExpr1);
+			Type type2 = visit(ctx.strExpr2);
 			
-			for (FloydParser.String_exprContext strExprDecl : ctx.strExpr) {
-				newType = visit(strExprDecl);
+			if(!(type1.name).equals(type2.name)) {
+				System.out.println("I am in Error2");
+				//Token tok = (Token) ctx.strExpr2.getPayload();
+				//this.printError(tok, "feature unsupported");
+			} else if(!(type1.name).equals("string") && !(type1.name).equals("int")) {
+				System.out.println("I am in Error1");
+				//this.printError(tok1, "feature unsupported");
 			}
 		} else {
-			newType = visit(ctx.strExpr.get(0));
+			newType = visit(ctx.strExpr1);
 		}
 		
 		return newType;
@@ -320,13 +363,17 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitPointMethExpr(FloydParser.PointMethExprContext ctx) {
-	
+		
 		return null;
 	}
 	
 	@Override
 	public Type visitMethExpr(FloydParser.MethExprContext ctx) {
-		
+		String methName = ctx.IDENTIFIER().getText();
+		if(!this.classDec.methods.containsKey(methName)) {
+			Token tok = (Token) ctx.IDENTIFIER().getPayload();
+			this.printError(tok, "Undefined function " + methName);
+		}
 		return null;
 	}
 
@@ -352,7 +399,6 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public Type visitIdTerm(FloydParser.IdTermContext ctx) {
 		Type newType = null;
 		String name = ctx.getText();
-		System.out.println("I am here " + name);
 		Symbol newSymbol = this.sblTable.lookup(name);
 		if (newSymbol == null) {
 			System.out.println("Use of undeclared variable " + name);

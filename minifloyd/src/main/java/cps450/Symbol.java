@@ -2,22 +2,22 @@ package cps450;
 
 public class Symbol {
 	
-	private int scope;
+	private int scopeS;
 	private String name;
 	private Declaration attributes;
 	
 	
-	public Symbol(int newScope, String newName, Declaration newAttribute) {
-		this.scope = newScope;
+	public Symbol(int newScopeS, String newName, Declaration newAttribute) {
+		this.scopeS = newScopeS;
 		this.name = newName;
 		this.attributes = newAttribute;
 	}
 	
-	public int getScope() {
-		return scope;
+	public int getScopeS() {
+		return scopeS;
 	}
-	public void setScope(int scope) {
-		this.scope = scope;
+	public void setScopeS(int scopeS) {
+		this.scopeS = scopeS;
 	}
 	public String getName() {
 		return name;

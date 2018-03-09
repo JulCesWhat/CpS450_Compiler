@@ -31,7 +31,7 @@ public final class SymbolTable {
 		
 		if(symbolAL.size() -1 >= this.scope) {
 			symbolAL.get(this.scope).put(name, newSymbol);
-		} {
+		} else {
 			HashMap<String, Symbol> localHM = new HashMap<>();
 			localHM.put(name, newSymbol);
 			symbolAL.add(localHM);

@@ -19,8 +19,7 @@ class MethodDecl extends Declaration {
 	public HashMap<String, VarDecl> localVars;
 	public HashMap<String, VarDecl> parameters;
 	
-	public MethodDecl(Type newType) {
-		super.type = newType;
+	public MethodDecl() {
 		this.localVars = new HashMap<>();
 		this.parameters = new HashMap<>();
 	}
@@ -30,9 +29,10 @@ class ClassDecl extends Declaration {
 	// more will go here eventually ...
 	public HashMap<String, MethodDecl> methods;
 	public HashMap<String, VarDecl> glovalVars;
+	public String name;
 	
-	public ClassDecl(Type newType) {
-		super.type = newType;
+	public ClassDecl(String newName) {
+		this.name = newName;
 		this.methods = new HashMap<>();
 		this.glovalVars = new HashMap<>();
 	}

@@ -110,7 +110,7 @@ and_expr
    ;
 
 relational_expr
-   : strExpr+=string_expr ( relational_op strExpr+=string_expr )?
+   : strExpr1=string_expr ( relational_op strExpr2=string_expr )?
    ;
 
 string_expr
