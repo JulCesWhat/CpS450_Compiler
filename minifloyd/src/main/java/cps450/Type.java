@@ -1,0 +1,17 @@
+package cps450;
+
+public class Type {
+
+	public static final Type 
+		ERROR = new Type("<error>"),
+		INT = new Type("int"),
+		BOOLEAN = new Type("boolean"),
+		STRING = new Type("string");
+
+	protected String name;
+
+	
+	protected Type(String name) {
+		this.name = name;
+	}
+}

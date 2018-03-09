@@ -9,7 +9,7 @@ repositories {
     jcenter()
 }
 
-generateGrammarSource {arguments += ["-package", "cps450"]}
+generateGrammarSource {arguments += ["-package", "cps450", "-visitor"]}
 
 dependencies {
   testCompile 'junit:junit:4.12'
