@@ -88,7 +88,7 @@ loop_stmt
 
 
 call_stmt
-   : ( expression POINT )? IDENTIFIER LPAREN ( expression )? RPAREN
+   : ( expression POINT )? IDENTIFIER LPAREN ( expression_list )? RPAREN
    ;
 
 
