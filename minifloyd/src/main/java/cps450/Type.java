@@ -6,7 +6,8 @@ public class Type {
 		ERROR = new Type("<error>"),
 		INT = new Type("int"),
 		BOOLEAN = new Type("boolean"),
-		STRING = new Type("string");
+		STRING = new Type("string"),
+		VOID = new Type("void");
 
 	protected String name;
 
