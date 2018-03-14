@@ -32,6 +32,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 
 		String varName = ctx.IDENTIFIER().getText();
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
+		
+		System.out.println(".data\n");
 
 		System.out.println("# Line " + tok.getLine() + ": " + varName + ": " + ctx.type().getText());
 		System.out.println("	.comm	" + varName + ",4,4 \n");
@@ -293,7 +295,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitIdTerm(FloydParser.IdTermContext ctx) {
 		String var = ctx.getText();
-		System.out.println("        pushl    " + var);
+		System.out.println("        pushl   " + var);
 		
 		return Type.ERROR;
 	}
