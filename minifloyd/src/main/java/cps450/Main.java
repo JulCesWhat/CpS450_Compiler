@@ -54,8 +54,12 @@ public class Main
         	System.out.println(parser.getNumberOfSyntaxErrors() + " syntax error(s)");
         else {
 
-        	System.out.println("Walking tree with SemanticChecker...");
-        	new SemanticChecker(options.getFilenames().get(0)).visit(tree);
+        	//System.out.println("Walking tree with SemanticChecker...");
+        	//new SemanticChecker(options.getFilenames().get(0)).visit(tree);
+        	
+        	System.out.println("Walking tree with CodeGen...");
+        	new CodeGen(options.getFilenames().get(0)).visit(tree);
+        	
         }
         
         if (options.getParser())
