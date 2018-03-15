@@ -14,7 +14,7 @@ class TargetInstruction {
 class Label extends TargetInstruction {
 	
 	public Label(String newLab) {
-		super.text = "	" + newLab;
+		super.text = newLab;
 	}
 	
 	public String getText() {

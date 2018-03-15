@@ -1,18 +1,15 @@
 package cps450;
 
-import java.io.FileOutputStream;
-import java.io.PrintStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.antlr.v4.runtime.Token;
+
+
 
 public class CodeGen extends FloydBaseVisitor<Type> {
 
@@ -58,6 +55,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.emitComm(tok.getLine(), varName, colon, ctx.type().getText());
 		//System.out.println("	.comm	" + varName + ",4,4 \n");
 		this.emitDir(".com", varName + ",4,4");
+		this.emitnewLin();
 
 		return null;
 	}
@@ -89,6 +87,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		}
 		
 		String lineMe = Integer.toString(ctx.idMeS.getLine());
+		
+		this.emitnewLin();
 		//System.out.println("# -----------------------------------------");
 		this.emitComm();
 		//System.out.println("# Line " + lineMs + ": end " + ctx.idMeE.getText());
@@ -114,6 +114,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		String varName = ctx.IDENTIFIER().getText();
 
+		this.emitnewLin();
 		//System.out.println("# -----------------------------------------");
 		this.emitComm();
 		//System.out.println("# Line " + tok.getLine() + ": " + varName + " := " + ctx.e2.getText());
@@ -150,6 +151,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		String methName = ctx.IDENTIFIER().getText();
 		
+		this.emitnewLin();
 		//System.out.println("# -----------------------------------------");
 		this.emitComm();
 		//System.out.println("# Line " + tok.getLine() + ": " + ctx.expression().getText() + "." + methName + "(" + ctx.expression_list().getText() + ")");
@@ -406,11 +408,15 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	
 	public  void emitComm(String newComm) {
 		String comm = "        " + newComm;
-		this.instrucs.add(new Comment(newComm));
+		this.instrucs.add(new Comment(comm));
 	}
 	
 	public void emitComm() {
 		this.instrucs.add(new Comment("# -----------------------------------------"));
+	}
+	
+	public void emitnewLin() {
+		this.instrucs.add(new Comment(""));
 	}
 	
 	public void emitDir(String newDir, String dirComp) {
