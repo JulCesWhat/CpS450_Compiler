@@ -9,32 +9,46 @@ import java.util.ArrayList;
 public class Options {
     boolean debugScanner = false;
     boolean debugParser = false;
+    boolean sourceLevDebug = false;
+    boolean createASM = false;
     ArrayList<String> filenames = new ArrayList<String>();
 
     public Options(String[] arguments) {
         for (String arg: arguments) {
         	if (arg.equals("-ds"))
-        		debugScanner = true;
+        		this.debugScanner = true;
         	else if (arg.equals("-dp"))
-        		debugParser = true;
-        	else
-        		filenames.add(arg);
+        		this.debugParser = true;
+        	else if (arg.equals("-S")){
+        		this.createASM = true;
+        	} else if(arg.equals("-g")) {
+        		this.sourceLevDebug = true;
+        	} else
+        		this.filenames.add(arg);
         }
     }
 
     public boolean getScanner() {
-        return debugScanner;
+        return this.debugScanner;
     }
 
     public boolean getParser() {
-        return debugParser;
+        return this.debugParser;
+    }
+    
+    public boolean getSourceLevDebug() {
+    	return this.sourceLevDebug;
+    }
+    
+    public boolean getCreateASM() {
+    	return this.createASM;
     }
 
     public ArrayList<String> getFilenames() {
-        return filenames;
+        return this.filenames;
     }
 
-	// public int getFilenameLength() {
-	// 	return filenames.length
-	// }
+	public int getFilenameSize() {
+		return this.filenames.size();
+	}
 }

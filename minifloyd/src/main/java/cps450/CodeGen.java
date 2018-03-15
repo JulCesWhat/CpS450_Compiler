@@ -1,6 +1,17 @@
 package cps450;
 
+import java.io.FileOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.antlr.v4.runtime.Token;
 
 public class CodeGen extends FloydBaseVisitor<Type> {
@@ -15,14 +26,23 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 
 	@Override
 	public Type visitClass_decl(FloydParser.Class_declContext ctx) {
-
+		
+		//System.out.println(".data\n");
+		this.emitLab(".data");
+		
 		for (FloydParser.Var_declContext varDecl : ctx.claVarDecs) {
 			Type newType = visit(varDecl);
 		}
+		
+		
+		//System.out.println(".text");
+		this.emitLab(".text");
 
 		for (FloydParser.Method_declContext metDecl : ctx.claMetDecs) {
 			Type newType = visit(metDecl);
 		}
+		
+		this.createAssemblyFile();
 
 		return null;
 	}
@@ -32,11 +52,12 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 
 		String varName = ctx.IDENTIFIER().getText();
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
-		
-		System.out.println(".data\n");
+		String colon = ctx.COLON().getText() + " ";
 
-		System.out.println("# Line " + tok.getLine() + ": " + varName + ": " + ctx.type().getText());
-		System.out.println("	.comm	" + varName + ",4,4 \n");
+		//System.out.println("# Line " + tok.getLine() + ": " + varName + ": " + ctx.type().getText());
+		this.emitComm(tok.getLine(), varName, colon, ctx.type().getText());
+		//System.out.println("	.comm	" + varName + ",4,4 \n");
+		this.emitDir(".com", varName + ",4,4");
 
 		return null;
 	}
@@ -44,15 +65,18 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitMethod_decl(FloydParser.Method_declContext ctx) {
 
-		System.out.println("	.text");
+		int lineMs = ctx.idMeS.getLine();
+		//System.out.println("# -----------------------------------------");
+		this.emitComm();
+		//System.out.println("# Line " + lineMs + ": " + ctx.idMeS.getText() + "()");
+		this.emitComm(lineMs, ctx.idMeS.getText(), "()");
+		//System.out.println("# -----------------------------------------");
+		this.emitComm();
 
-		String lineMs = Integer.toString(ctx.idMeS.getLine());
-		System.out.println("# -----------------------------------------");
-		System.out.println("# Line " + lineMs + ": " + ctx.idMeS.getText() + "()");
-		System.out.println("# -----------------------------------------\n");
-
-		System.out.println(".global	main");
-		System.out.println("main:");
+		//System.out.println(".global	main");
+		this.emitLab(".global	main");
+		//System.out.println("main:\n\n");
+		this.emitLab("main:");
 
 		for (FloydParser.Var_declContext metVarDecl : ctx.metVarDecs) {
 			System.out.println("Need to print here in visitMethod_decl() -> metVarDecs");
@@ -65,11 +89,16 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		}
 		
 		String lineMe = Integer.toString(ctx.idMeS.getLine());
-		System.out.println("# -----------------------------------------");
-		System.out.println("# Line " + lineMs + ": end " + ctx.idMeE.getText());
-		System.out.println("# -----------------------------------------\n");
-		System.out.println("        pushl $0");
-		System.out.println("        call  exit");
+		//System.out.println("# -----------------------------------------");
+		this.emitComm();
+		//System.out.println("# Line " + lineMs + ": end " + ctx.idMeE.getText());
+		this.emitComm(lineMs, "end ", ctx.idMeE.getText() );
+		//System.out.println("# -----------------------------------------\n");
+		this.emitComm();
+		//System.out.println("        pushl $0");
+		this.emitInst("pushl", " $0", null);
+		//System.out.println("        call  exit");
+		this.emitInst("call", "exit", null);
 
 		return null;
 	}
@@ -85,14 +114,20 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		String varName = ctx.IDENTIFIER().getText();
 
-		System.out.println("# -----------------------------------------");
-		System.out.println("# Line " + tok.getLine() + ": " + varName + " := " + ctx.e2.getText());
-		System.out.println("# -----------------------------------------");
+		//System.out.println("# -----------------------------------------");
+		this.emitComm();
+		//System.out.println("# Line " + tok.getLine() + ": " + varName + " := " + ctx.e2.getText());
+		this.emitComm(tok.getLine(), varName, " := ", ctx.e2.getText());
+		//System.out.println("# -----------------------------------------");
+		this.emitComm();
 
-		System.out.println("	# Evaluate RHS ...");
+		//System.out.println("	# Evaluate RHS ...");
+		this.emitComm("# Evaluate RHS ...");
 		Type newType = visit(ctx.e2);
-		System.out.println("	# Now, do the assignment...");
-		System.out.println("        popl    " + varName + "\n\n");
+		//System.out.println("	# Now, do the assignment...");
+		this.emitComm("# Now, do the assignment...");
+		//System.out.println("        popl    " + varName + "\n\n");
+		this.emitInst("popl", varName, null);
 
 		return null;
 	}
@@ -115,14 +150,19 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		String methName = ctx.IDENTIFIER().getText();
 		
-		System.out.println("# -----------------------------------------");
-		System.out.println("# Line " + tok.getLine() + ": " + ctx.expression().getText() + "." + methName + "(" + ctx.expression_list().getText() + ")");
-		System.out.println("# -----------------------------------------");
+		//System.out.println("# -----------------------------------------");
+		this.emitComm();
+		//System.out.println("# Line " + tok.getLine() + ": " + ctx.expression().getText() + "." + methName + "(" + ctx.expression_list().getText() + ")");
+		this.emitComm(tok.getLine(), ctx.expression().getText(), ".", methName + "()");
+		//System.out.println("# -----------------------------------------");
+		this.emitComm();
 		
 		newType = visit(ctx.expression_list());
 
-		System.out.println("        call	" + methName);
-		System.out.println("        addl	$4, %esp\n\n");
+		//System.out.println("        call	" + methName);
+		this.emitInst("call", methName, null);
+		//System.out.println("        addl	$4, %esp\n\n");
+		this.emitInst("addl", "$4", "%esp");
 
 		return newType;
 	}
@@ -221,9 +261,12 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 				newType = visit(mdExprDecl);
 				
 				if(i > 0) {
-					System.out.println("        call	add");
-					System.out.println("        addl	$8, %esp");
-					System.out.println("        push	%eax");
+					//System.out.println("        call	add");
+					this.emitInst("call", "add", null);
+					//System.out.println("        addl	$8, %esp");
+					this.emitInst("addl", "$8", "%esp");
+					//System.out.println("        push	%eax");
+					this.emitInst("push", "%eax", null);
 				}			
 			}
 			
@@ -295,7 +338,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitIdTerm(FloydParser.IdTermContext ctx) {
 		String var = ctx.getText();
-		System.out.println("        pushl   " + var);
+		//System.out.println("        pushl   " + var);
+		this.emitInst("pushl", var, null);
 		
 		return Type.ERROR;
 	}
@@ -304,7 +348,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	public Type visitIntExpr(FloydParser.IntExprContext ctx) {
 		
 		String num = ctx.getText();
-		System.out.println("        pushl   $" + num);
+		//System.out.println("        pushl   $" + num);
+		this.emitInst("pushl", "$" + num, null);
 		
 		return Type.INT;
 	}
@@ -332,11 +377,63 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	////////////////////////////////////////////
 	// Defined Methods
 	////////////////////////////////////////////
-	public void emit(String toWrite) {
-
+	public void emitLab(String newLab) {
+		this.instrucs.add(new Label(newLab));
 	}
-
+	
+	public void emitInst(String newIns, String newOp1, String newOp2) {
+		if(newOp2 == null) {
+			this.instrucs.add(new Instruction(newIns, newOp1));
+		} else {
+			this.instrucs.add(new Operands(newIns, newOp1, newOp2));
+		}
+	}
+	
+	public void emitComm(int line, String name, String op, String comp) {
+		//# Line 2: x: int
+		//  or
+		//# Line 7: x := 5
+		//  or
+		//# Line 9: out.writeint(x)
+		String comment = "# Line " + line + ": " + name + op + comp;
+		this.instrucs.add(new Comment(comment));
+	}
+	
+	public void emitComm(int line, String methName, String methComp) {
+		String comment = "# Line " + line + ": " + methName + methComp;
+		this.instrucs.add(new Comment(comment));
+	}
+	
+	public  void emitComm(String newComm) {
+		String comm = "        " + newComm;
+		this.instrucs.add(new Comment(newComm));
+	}
+	
+	public void emitComm() {
+		this.instrucs.add(new Comment("# -----------------------------------------"));
+	}
+	
+	public void emitDir(String newDir, String dirComp) {
+		this.instrucs.add(new Directive(newDir, dirComp));
+	}
+	
+	
+	
+	
 	public void createAssemblyFile() {
+		System.out.println("Size of Ins  " + this.instrucs.size());
+		
+		List<String> lines = new ArrayList<>();
+		for(TargetInstruction targIns: this.instrucs) {
+			lines.add(targIns.getText());
+		}
+		
+		try {		
+			Path file = Paths.get("TryOut.s");
+			Files.write(file, lines, Charset.forName("UTF-8"));
 
+		} catch (Exception e) {
+			System.out.println("There was an error: " + e.getMessage());
+		}
 	}
 }
