@@ -1,24 +1,25 @@
 .data
-# Line 2: x: int
+# Line 8: x: int
 	.comm	x,4,4
 
 .text
 # -----------------------------------------
-# Line 4: start()
+# Line 10: start()
 # -----------------------------------------
 .global	main
 main:
 
 # -----------------------------------------
-# Line 6: x := 3
+# Line 12: x := in.readint()
 # -----------------------------------------
         # Evaluate RHS ...
-        pushl    $3
+        call    readint
+        pushl    %eax
         # Now, do the assignment...
         popl    x
 
 # -----------------------------------------
-# Line 7: if (x>0) then
+# Line 13: if (x>0) then
 # -----------------------------------------
         pushl    x
         pushl    $0
@@ -27,62 +28,75 @@ main:
         push    %eax
         popl    %eax
         cmpl    $0, %eax
-        jne    _doif23
-        jmp    _else23
-_doif23:
+        jne    _doif00
+        jmp    _else00
+_doif00:
 
 # -----------------------------------------
-# Line 8: loop x>0
+# Line 14: out.writeint()
 # -----------------------------------------
-_while1:
-        pushl    x
-        pushl    $0
-        call    gtr
-        addl    $8, %esp
-        push    %eax
-        popl    %eax
-        cmpl    $0, %eax
-        jne    _startwhilebody1
-        jmp    _endwhile1
-_startwhilebody1:
-
-# -----------------------------------------
-# Line 9: out.writeint()
-# -----------------------------------------
-        pushl    x
-        call    writeint
-        addl    $4, %esp
-
-# -----------------------------------------
-# Line 10: x := x-1
-# -----------------------------------------
-        # Evaluate RHS ...
-        pushl    x
         pushl    $1
-        call    sub
-        addl    $8, %esp
-        push    %eax
-        # Now, do the assignment...
-        popl    x
-        jmp    _while1
-_endwhile1:
-        jmp    _endif23
-
-# -----------------------------------------
-# Line 12: else
-# -----------------------------------------
-_else23:
-
-# -----------------------------------------
-# Line 13: out.writeint()
-# -----------------------------------------
-        pushl    $999
         call    writeint
         addl    $4, %esp
-_endif23:
+        jmp    _endif00
 
 # -----------------------------------------
-# Line 4: end start
+# Line 15: else
+# -----------------------------------------
+_else00:
+
+# -----------------------------------------
+# Line 16: if (x=0) then
+# -----------------------------------------
+        pushl    x
+        pushl    $0
+        call    eq
+        addl    $8, %esp
+        push    %eax
+        popl    %eax
+        cmpl    $0, %eax
+        jne    _doif01
+        jmp    _else01
+_doif01:
+
+# -----------------------------------------
+# Line 17: out.writeint()
+# -----------------------------------------
+        pushl    $0
+        call    writeint
+        addl    $4, %esp
+        jmp    _endif01
+
+# -----------------------------------------
+# Line 18: else
+# -----------------------------------------
+_else01:
+
+# -----------------------------------------
+# Line 19: out.writeint()
+# -----------------------------------------
+        pushl    $-1
+        call    writeint
+        addl    $4, %esp
+_endif01:
+
+# -----------------------------------------
+# Line 21: out.writeint()
+# -----------------------------------------
+        pushl    $9
+        call    writeint
+        addl    $4, %esp
+_endif00:
+
+# -----------------------------------------
+# Line 23: out.writeint()
+# -----------------------------------------
+        pushl    $9
+        call    writeint
+        addl    $4, %esp
+
+# -----------------------------------------
+# Line 10: end start
 # -----------------------------------------
         pushl     $0
         call    exit

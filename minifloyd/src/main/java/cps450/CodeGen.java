@@ -16,7 +16,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	String fileName = null;
 	ArrayList<TargetInstruction> instrucs = null;
 	int ifNumGlob;
-	int ifNumSub;
+	int ifNumLoc;
 	int loopNumGlob;
 	Options options;
 
@@ -24,7 +24,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.fileName = newFileName;
 		this.instrucs = new ArrayList<>();
 		this.ifNumGlob = -1;
-		this.ifNumSub = -1;
+		this.ifNumLoc = -1;
 		this.loopNumGlob = -1;
 		this.options = newOptions;
 	}
@@ -89,7 +89,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 				//With this we handle subIfs
 				if(stmts.if_stmt() != null) {
 					this.ifNumGlob++;
-					this.ifNumSub = -1;
+					this.ifNumLoc = -1;
 				}
 				Type newType = visit(stmts);
 			}
@@ -135,9 +135,9 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	//NEED TO FIX THE NESTED IFS
 	@Override
 	public Type visitIf_stmt(FloydParser.If_stmtContext ctx) {
-		this.ifNumSub++;
+		this.ifNumLoc++;
 
-		String ifNum = this.ifNumGlob + "" + this.ifNumSub;
+		String ifNum = this.ifNumGlob + "" + this.ifNumLoc;
 
 		this.emitnewLin();
 		this.emitComm();
@@ -185,23 +185,24 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitLoop_stmt(FloydParser.Loop_stmtContext ctx) {
-		this.ifNumSub++;
+		this.loopNumGlob++;
+		int locNum = this.loopNumGlob;
 
 		this.emitnewLin();
 		this.emitComm();
 		this.emitComm(ctx.loS.getLine(), ctx.loS.getText(), " " + ctx.expression().getText(), "");
 		this.emitComm();
 
-		this.emitLab("_while" + ifNumSub + ":");
+		this.emitLab("_while" + locNum + ":");
 
 		Type newType = visit(ctx.expression());
 
 		this.emitInst("popl", "%eax", null);
 		this.emitInst("cmpl", "$0", "%eax");
-		this.emitInst("jne", "_startwhilebody" + ifNumSub, null);
-		this.emitInst("jmp", "_endwhile" + ifNumSub, null);
+		this.emitInst("jne", "_startwhilebody" + locNum, null);
+		this.emitInst("jmp", "_endwhile" + locNum, null);
 
-		this.emitLab("_startwhilebody" + ifNumSub + ":");
+		this.emitLab("_startwhilebody" + locNum + ":");
 		if (ctx.expression() != null) {
 
 			for (FloydParser.StatementContext stmts : ctx.statement_list().stmts) {
@@ -209,8 +210,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 			}
 		}
 
-		this.emitInst("jmp", "_while" + ifNumSub, null);
-		this.emitLab("_endwhile" + ifNumSub + ":");
+		this.emitInst("jmp", "_while" + locNum, null);
+		this.emitLab("_endwhile" + locNum + ":");
 
 		return null;
 	}
@@ -564,7 +565,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 			Path file = Paths.get(fileNaPar[0] + ".s");
 			Files.write(file, lines, Charset.forName("UTF-8"));
 
-			if(this.options.createASM) {
+			if(!this.options.createASM) {
 				ProcessBuilder p3 = new ProcessBuilder("gcc", "-m32", fileNaPar[0] + ".s", "stdlib.o", "-o" + fileNaPar[0]);
 				Process process3 = p3.start();
 
