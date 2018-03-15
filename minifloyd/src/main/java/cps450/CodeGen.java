@@ -551,25 +551,32 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	
 	
 	
-	
 	public void createAssemblyFile() {
-		
+		String[] fileNaPar = this.fileName.split("\\.");
+
 		List<String> lines = new ArrayList<>();
-		for(TargetInstruction targIns: this.instrucs) {
+		for (TargetInstruction targIns : this.instrucs) {
 			lines.add(targIns.getText());
 		}
-		
-		try {		
-			Path file = Paths.get("TryOut.s");
+
+		try {
+
+			Path file = Paths.get(fileNaPar[0] + ".s");
 			Files.write(file, lines, Charset.forName("UTF-8"));
+
+			if(this.options.createASM) {
+				ProcessBuilder p3 = new ProcessBuilder("gcc", "-m32", fileNaPar[0] + ".s", "stdlib.o", "-o" + fileNaPar[0]);
+				Process process3 = p3.start();
+
+				process3.waitFor();
+				
+				if(process3.exitValue() == 0) {
+					System.out.println("Succes at creating the executable.");
+				}
+			}
+
 		} catch (Exception e) {
 			System.out.println("There was an error: " + e.getMessage());
-		}
-		
-		if( this.options.getCreateASM() ) {
-			
-		} else {
-			
 		}
 	}
 }
