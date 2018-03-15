@@ -58,7 +58,7 @@ public class Main
         	//new SemanticChecker(options.getFilenames().get(0)).visit(tree);
         	
         	System.out.println("Walking tree with CodeGen...");
-        	new CodeGen(options.getFilenames().get(0)).visit(tree);
+        	new CodeGen(options.getFilenames().get(0), options).visit(tree);
         	
         }
         

@@ -14,6 +14,6 @@
 #gcc floydDemo_sourcedebug.s lib.o -odemo_floydsource
 
 gcc -g -c lib.c
-gcc -g cmain.c lib.o -octest
+#gcc -g cmain.c lib.o -octest
 gcc -g -c asmmain.s 
 gcc -g asmmain.o lib.o -oasmtest

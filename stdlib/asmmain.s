@@ -1,56 +1,88 @@
-
-
 .data
-
 # Line 2: x: int
-	.comm	x,4,4 
-
-# Line 3: y: int
-	.comm	y,4,4 
+	.comm	x,4,4
 
 .text
 # -----------------------------------------
-# Line 5: start()
+# Line 4: start()
 # -----------------------------------------
 .global	main
 main:
 
-
 # -----------------------------------------
-# Line 7: x := 5
+# Line 6: x := 3
 # -----------------------------------------
-	# Evaluate RHS ...
-        pushl   $5
-	# Now, do the assignment...
+        # Evaluate RHS ...
+        pushl    $3
+        # Now, do the assignment...
         popl    x
 
+# -----------------------------------------
+# Line 7: if (x>0) then
+# -----------------------------------------
+        pushl    x
+        pushl    $0
+        call    gtr
+        addl    $8, %esp
+        push    %eax
+        popl    %eax
+        cmpl    $0, %eax
+        jne    _doif23
+        jmp    _else23
+_doif23:
 
 # -----------------------------------------
-# Line 8: y := 3+x
+# Line 8: loop x>0
 # -----------------------------------------
-	# Evaluate RHS ...
-        pushl   $3
-        pushl   x
-        call	add
-        addl	$8, %esp
-        push	%eax
-	# Now, do the assignment...
-        popl    y
-
-
-# -----------------------------------------
-# Line 9: out.writeint(x)
-# -----------------------------------------
-        pushl   x
-        call	writeint
-        addl	$4, %esp
-
+_while1:
+        pushl    x
+        pushl    $0
+        call    gtr
+        addl    $8, %esp
+        push    %eax
+        popl    %eax
+        cmpl    $0, %eax
+        jne    _startwhilebody1
+        jmp    _endwhile1
+_startwhilebody1:
 
 # -----------------------------------------
-# Line 5: end start
+# Line 9: out.writeint()
 # -----------------------------------------
+        pushl    x
+        call    writeint
+        addl    $4, %esp
 
-        pushl $0
-        call  exit
+# -----------------------------------------
+# Line 10: x := x-1
+# -----------------------------------------
+        # Evaluate RHS ...
+        pushl    x
+        pushl    $1
+        call    sub
+        addl    $8, %esp
+        push    %eax
+        # Now, do the assignment...
+        popl    x
+        jmp    _while1
+_endwhile1:
+        jmp    _endif23
 
-	
+# -----------------------------------------
+# Line 12: else
+# -----------------------------------------
+_else23:
+
+# -----------------------------------------
+# Line 13: out.writeint()
+# -----------------------------------------
+        pushl    $999
+        call    writeint
+        addl    $4, %esp
+_endif23:
+
+# -----------------------------------------
+# Line 4: end start
+# -----------------------------------------
+        pushl     $0
+        call    exit
