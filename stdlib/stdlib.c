@@ -1,4 +1,6 @@
 #include <syscall.h>
+#include <unistd.h>
+
 
 int eq(int num1, int num2) {
   if(num1 == num2) {
@@ -57,9 +59,25 @@ int div(int num1, int num2) {
 //Reads and input from standard in into a variable
 int readint() {
 
-  // For right now we are just returning a 0
-  return 0;
+  char buf[20] = { '\0' };
+  read(0, buf, sizeof(buf));
+  const char * s = buf;
+
+  int sign = 1;
+  if ( * s == '-') {
+    sign = -1;
+    s++;
+  }
+
+  int num = 0;
+  while (*s != '\n') {
+    num = (( * s) - '0') + (num * 10);
+    s++;
+  }
+
+  return num * sign;
 }
+
 
 //Writes an int to standard output
 void writeint(int num) {
