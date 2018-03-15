@@ -31,8 +31,16 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 
 	@Override
 	public Type visitClass_decl(FloydParser.Class_declContext ctx) {
+		
+		this.emitComm();
+		this.emitComm("# Jwhat331 ...");
+		this.emitComm("# CpS450 - Phase4 ...");
+		this.emitComm("# " + this.fileName + " ...");
+		this.emitComm();
+		this.emitnewLin();
+		this.emitnewLin();
+		
 
-		//System.out.println(this.options.getFilenameSize());
 		this.emitLab(".data");
 		
 		for (FloydParser.Var_declContext varDecl : ctx.claVarDecs) {
