@@ -1,14 +1,14 @@
 # CpS 450
 
-This repository contains CpS 450 Class Files.
+This repository contains CpS 450 Class Files for Phase4.
 
 # Number of hours spent on project
 
-4 hours spent on project.
+15 hours spent on project.
 
 # Known bugs
 
-Precedence not working correctly, but passes the requirements and successfully parses cptestok.floyd. ;)
+Everything should be working perfectly.
 
 # Academic integrity
 
@@ -17,4 +17,5 @@ Signature: Julio Cesar Whatley
 
 # Bonus
 
-[Bonus Link](https://streamable.com/b7hnf)
+- [Phase 1 Bonus](https://streamable.com/b7hnf)
+- Phase 4 bonus completed

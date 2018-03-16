@@ -73,17 +73,17 @@ assignment_stmt
 
 
 if_stmt
-   : IF expression THEN (ENDOFLINE_1)+
-     statement_list
-     ( ELSE ENDOFLINE_1+ statement_list )?
-     END IF
+   : ifS=IF expression THEN (ENDOFLINE_1)+
+     e1=statement_list
+     ( ELSE ENDOFLINE_1+ e2=statement_list )?
+     END ifE=IF
    ;
 
 
 loop_stmt
-   : LOOP WHILE expression ENDOFLINE_1+
+   : loS=LOOP WHILE expression ENDOFLINE_1+
      statement_list
-     END LOOP
+     END loE=LOOP
    ;
 
 

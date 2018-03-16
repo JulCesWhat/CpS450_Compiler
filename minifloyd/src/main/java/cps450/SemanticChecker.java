@@ -501,6 +501,11 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		return newType;
 	}
 	
+	
+	
+	////////////////////////////////////////////
+	// Method New Expression  ==>  (method_new_expr)
+	////////////////////////////////////////////
 	@Override
 	public Type visitNewExpr(FloydParser.NewExprContext ctx) {
 		Token tok = (Token) ctx.getPayload();
@@ -562,7 +567,9 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	
 	
-	//Primay Expression
+	////////////////////////////////////////////
+	// Primay Expression  -->  (primary_expr)
+	////////////////////////////////////////////
 	@Override
 	public Type visitArrayExpr(FloydParser.ArrayExprContext ctx) {
 		Token tok = (Token) ctx.getPayload();
