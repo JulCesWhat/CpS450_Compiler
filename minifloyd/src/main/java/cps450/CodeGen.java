@@ -19,6 +19,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	int ifNumLoc;
 	int loopNumGlob;
 	Options options;
+	boolean gFlag;
+	String curMethName;
 
 	public CodeGen(String newFileName, Options newOptions) {
 		this.fileName = newFileName;
@@ -27,11 +29,13 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.ifNumLoc = -1;
 		this.loopNumGlob = -1;
 		this.options = newOptions;
+		this.gFlag = this.options.sourceLevDebug;
+		this.curMethName = "";
 	}
 
 	@Override
 	public Type visitClass_decl(FloydParser.Class_declContext ctx) {
-		
+
 		this.emitComm();
 		this.emitComm("# Jwhat331 ...");
 		this.emitComm("# CpS450 - Phase4 ...");
@@ -39,7 +43,15 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.emitComm();
 		this.emitnewLin();
 		this.emitnewLin();
+
 		
+		if (this.gFlag) {
+			this.emitDir(".file", "\"" + this.fileName + "\"");
+			this.emitDir(".stabs", "\"" + this.fileName + "\",100,0,0,.Ltext0");
+			this.emitDir(".text", "");
+			this.emitLab(".Ltext0:");
+			this.emitDir(".stabs", "\"int:t(0,1)=r(0,1);-2147483648;2147483647;\",128,0,0,0");
+		}
 
 		this.emitLab(".data");
 		
@@ -70,6 +82,9 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		
 		this.emitComm(tok.getLine(), varName, colon, ctx.type().getText());
 		this.emitDir(".comm", varName + ",4,4");
+		if (this.gFlag) {
+			this.emitDir(".stabs", "\"" + varName + ":G(0,1)\",32,0,0,0");
+		}
 		this.emitnewLin();
 
 		return null;
@@ -79,13 +94,26 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	public Type visitMethod_decl(FloydParser.Method_declContext ctx) {
 
 		int lineMs = ctx.idMeS.getLine();
+		String methName = ctx.idMeS.getText();
 		this.emitComm();
 		this.emitComm(lineMs, ctx.idMeS.getText(), "()");
 		this.emitComm();
 
-
-		this.emitLab(".global	main");
-		this.emitLab("main:");
+		if ((methName).equals("start")) {
+			this.emitLab(".global	main");
+			this.curMethName = "main";
+			if (this.gFlag) {
+				this.emitDir(".stabs", "\"main:F\",36,0,0,main");
+			}
+			this.emitLab("main:");
+		} else {
+			this.emitLab(".global	" + methName);
+			this.curMethName = methName;
+			if (this.gFlag) {
+				this.emitDir(".stabs", "\"" + methName + ":F\",36,0,0," + methName);
+			}
+			this.emitLab(methName + ":");
+		}
 
 		for (FloydParser.Var_declContext metVarDecl : ctx.metVarDecs) {
 			System.out.println("Need to print here in visitMethod_decl() -> metVarDecs");
@@ -103,12 +131,19 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 			}
 		}
 		
-		String lineMe = Integer.toString(ctx.idMeS.getLine());
+		int lineMe = ctx.idMeE.getLine();
 		
 		this.emitnewLin();
 		this.emitComm();
-		this.emitComm(lineMs, "end ", ctx.idMeE.getText() );
+		this.emitComm(lineMe, "end ", ctx.idMeE.getText() );
 		this.emitComm();
+		
+		if(this.gFlag) {
+			this.emitDir(".stabn", "68,0," + lineMe + ",.line" + lineMe + "-" + this.curMethName);
+			this.emitLab(".line" + lineMe + ":");
+		}
+		
+		
 		this.emitInst("pushl", " $0", null);
 		this.emitInst("call", "exit", null);
 
@@ -125,11 +160,17 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		String varName = ctx.IDENTIFIER().getText();
+		int lineNum = tok.getLine();
 
 		this.emitnewLin();
 		this.emitComm();
-		this.emitComm(tok.getLine(), varName, " := ", ctx.e2.getText());
+		this.emitComm(lineNum, varName, " := ", ctx.e2.getText());
 		this.emitComm();
+		
+		if(this.gFlag) {
+			this.emitDir(".stabn", "68,0," + lineNum + ",.line" + lineNum + "-" + this.curMethName);
+			this.emitLab(".line" + lineNum + ":");
+		}
 
 
 		this.emitComm("# Evaluate RHS ...");
@@ -229,11 +270,17 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		Type newType = null;
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		String methName = ctx.IDENTIFIER().getText();
+		int lineNum = tok.getLine();
 		
 		this.emitnewLin();
 		this.emitComm();
-		this.emitComm(tok.getLine(), ctx.expression().getText(), ".", methName + "()");
+		this.emitComm(lineNum, ctx.expression().getText(), ".", methName + "()");
 		this.emitComm();
+		
+		if(this.gFlag) {
+			this.emitDir(".stabn", "68,0," + lineNum + ",.line" + lineNum + "-" + this.curMethName);
+			this.emitLab(".line" + lineNum + ":");
+		}
 		
 		newType = visit(ctx.expression_list());
 
@@ -574,12 +621,12 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 			Files.write(file, lines, Charset.forName("UTF-8"));
 
 			if(!this.options.createASM) {
-				ProcessBuilder p3 = new ProcessBuilder("gcc", "-m32", fileNaPar[0] + ".s", "stdlib.o", "-o" + fileNaPar[0]);
-				Process process3 = p3.start();
+				ProcessBuilder pr = new ProcessBuilder("gcc", "-m32", fileNaPar[0] + ".s", "stdlib.o", "-o" + fileNaPar[0]);
+				Process process = pr.start();
 
-				process3.waitFor();
+				process.waitFor();
 				
-				if(process3.exitValue() == 0) {
+				if(process.exitValue() == 0) {
 					System.out.println("Succes at creating the executable.");
 				}
 			}

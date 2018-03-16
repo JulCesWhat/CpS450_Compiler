@@ -1,102 +1,100 @@
-.data
-# Line 8: x: int
-	.comm	x,4,4
-
+# --------------------------
+# Line 7: inside class testnum
+# --------------------------
+   
+.data  
+.comm _x,4,4  
+# --------------------------
+# Line 10: inside method start
+# --------------------------
+   
 .text
-# -----------------------------------------
-# Line 10: start()
-# -----------------------------------------
-.global	main
-main:
-
-# -----------------------------------------
-# Line 12: x := in.readint()
-# -----------------------------------------
-        # Evaluate RHS ...
-        call    readint
-        pushl    %eax
-        # Now, do the assignment...
-        popl    x
-
-# -----------------------------------------
-# Line 13: if (x>0) then
-# -----------------------------------------
-        pushl    x
-        pushl    $0
-        call    gtr
-        addl    $8, %esp
-        push    %eax
-        popl    %eax
-        cmpl    $0, %eax
-        jne    _doif00
-        jmp    _else00
-_doif00:
-
-# -----------------------------------------
-# Line 14: out.writeint()
-# -----------------------------------------
-        pushl    $1
-        call    writeint
-        addl    $4, %esp
-        jmp    _endif00
-
-# -----------------------------------------
-# Line 15: else
-# -----------------------------------------
-_else00:
-
-# -----------------------------------------
-# Line 16: if (x=0) then
-# -----------------------------------------
-        pushl    x
-        pushl    $0
-        call    eq
-        addl    $8, %esp
-        push    %eax
-        popl    %eax
-        cmpl    $0, %eax
-        jne    _doif01
-        jmp    _else01
-_doif01:
-
-# -----------------------------------------
-# Line 17: out.writeint()
-# -----------------------------------------
-        pushl    $0
-        call    writeint
-        addl    $4, %esp
-        jmp    _endif01
-
-# -----------------------------------------
-# Line 18: else
-# -----------------------------------------
-_else01:
-
-# -----------------------------------------
-# Line 19: out.writeint()
-# -----------------------------------------
-        pushl    $-1
-        call    writeint
-        addl    $4, %esp
-_endif01:
-
-# -----------------------------------------
-# Line 21: out.writeint()
-# -----------------------------------------
-        pushl    $9
-        call    writeint
-        addl    $4, %esp
-_endif00:
-
-# -----------------------------------------
-# Line 23: out.writeint()
-# -----------------------------------------
-        pushl    $9
-        call    writeint
-        addl    $4, %esp
-
-# -----------------------------------------
-# Line 10: end start
-# -----------------------------------------
-        pushl     $0
-        call    exit
+.global main
+main:  
+# --------------------------
+# Line 12: x:=in.readint()
+# --------------------------
+   
+# Evaluating RHS    
+# --------------------------
+# Line 12: in.readint()
+# --------------------------
+   
+ call  readint
+ addl  $4, %esp
+ pushl  %eax 
+# Do Assignment
+ popl _x
+ pushl _x
+ pushl $0 
+# relational '>'
+ popl %ebx
+ popl %eax
+ cmpl %ebx, %eax
+ setgb %al
+ movzbl %al, %eax
+ pushl %eax 
+# Ifing
+ popl %eax
+ cmp $1, %eax
+ je _iftrue1
+ jmp _iffalse1
+_iftrue1:  
+# --------------------------
+# Line 14: out.writeint(1)
+# --------------------------
+   
+ pushl $1
+ call  writeint
+ addl  $4, %esp
+ jmp _endif1
+_iffalse1:  
+ pushl _x
+ pushl $0 
+# relational '='
+ popl %ebx
+ popl %eax
+ cmpl %eax, %ebx
+ seteb %al
+ movzbl %al, %eax
+ pushl %eax 
+# Ifing
+ popl %eax
+ cmp $1, %eax
+ je _iftrue2
+ jmp _iffalse2
+_iftrue2:  
+# --------------------------
+# Line 17: out.writeint(0)
+# --------------------------
+   
+ pushl $0
+ call  writeint
+ addl  $4, %esp
+ jmp _endif2
+_iffalse2:  
+# --------------------------
+# Line 19: out.writeint(-1)
+# --------------------------
+   
+ pushl $-1
+ call  writeint
+ addl  $4, %esp
+ jmp _endif2
+_endif2:  
+# --------------------------
+# Line 21: out.writeint(9)
+# --------------------------
+   
+ pushl $9
+ call  writeint
+ addl  $4, %esp
+ jmp _endif1
+_endif1:  
+# --------------------------
+# Line 23: out.writeint(9)
+# --------------------------
+   
+ pushl $9
+ call  writeint
+ addl  $4, %esp

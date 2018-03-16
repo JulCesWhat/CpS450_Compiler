@@ -4,105 +4,66 @@
         # demo.floyd ...
 # -----------------------------------------
 
+
+	.file	"demo.floyd"
+	.stabs	"demo.floyd",100,0,0,.Ltext0
+	.text	
+.Ltext0:
+	.stabs	"int:t(0,1)=r(0,1);-2147483648;2147483647;",128,0,0,0
 .data
-# Line 8: x: int
+# Line 2: x: int
 	.comm	x,4,4
+	.stabs	"x:G(0,1)",32,0,0,0
+
+# Line 3: y: int
+	.comm	y,4,4
+	.stabs	"y:G(0,1)",32,0,0,0
 
 .text
 # -----------------------------------------
-# Line 10: start()
+# Line 5: start()
 # -----------------------------------------
 .global	main
+	.stabs	"main:F",36,0,0,main
 main:
 
 # -----------------------------------------
-# Line 12: x := in.readint()
+# Line 7: x := 5
 # -----------------------------------------
+	.stabn	68,0,7,.line7-main
+.line7:
         # Evaluate RHS ...
-        call    readint
-        pushl    %eax
+        pushl    $5
         # Now, do the assignment...
         popl    x
 
 # -----------------------------------------
-# Line 13: if (x>0) then
+# Line 8: y := 3+x
 # -----------------------------------------
+	.stabn	68,0,8,.line8-main
+.line8:
+        # Evaluate RHS ...
+        pushl    $3
         pushl    x
-        pushl    $0
-        call    gtr
+        call    add
         addl    $8, %esp
         push    %eax
-        popl    %eax
-        cmpl    $0, %eax
-        jne    _doif00
-        jmp    _else00
-_doif00:
+        # Now, do the assignment...
+        popl    y
 
 # -----------------------------------------
-# Line 14: out.writeint()
+# Line 9: out.writeint()
 # -----------------------------------------
-        pushl    $1
-        call    writeint
-        addl    $4, %esp
-        jmp    _endif00
-
-# -----------------------------------------
-# Line 15: else
-# -----------------------------------------
-_else00:
-
-# -----------------------------------------
-# Line 16: if (x=0) then
-# -----------------------------------------
+	.stabn	68,0,9,.line9-main
+.line9:
         pushl    x
-        pushl    $0
-        call    eq
-        addl    $8, %esp
-        push    %eax
-        popl    %eax
-        cmpl    $0, %eax
-        jne    _doif01
-        jmp    _else01
-_doif01:
-
-# -----------------------------------------
-# Line 17: out.writeint()
-# -----------------------------------------
-        pushl    $0
-        call    writeint
-        addl    $4, %esp
-        jmp    _endif01
-
-# -----------------------------------------
-# Line 18: else
-# -----------------------------------------
-_else01:
-
-# -----------------------------------------
-# Line 19: out.writeint()
-# -----------------------------------------
-        pushl    $-1
-        call    writeint
-        addl    $4, %esp
-_endif01:
-
-# -----------------------------------------
-# Line 21: out.writeint()
-# -----------------------------------------
-        pushl    $9
-        call    writeint
-        addl    $4, %esp
-_endif00:
-
-# -----------------------------------------
-# Line 23: out.writeint()
-# -----------------------------------------
-        pushl    $9
         call    writeint
         addl    $4, %esp
 
 # -----------------------------------------
 # Line 10: end start
 # -----------------------------------------
+	.stabn	68,0,10,.line10-main
+.line10:
         pushl     $0
         call    exit
