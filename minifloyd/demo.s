@@ -5,65 +5,166 @@
 # -----------------------------------------
 
 
-	.file	"demo.floyd"
-	.stabs	"demo.floyd",100,0,0,.Ltext0
-	.text	
-.Ltext0:
-	.stabs	"int:t(0,1)=r(0,1);-2147483648;2147483647;",128,0,0,0
 .data
-# Line 2: x: int
+# Line 6: x: int
 	.comm	x,4,4
-	.stabs	"x:G(0,1)",32,0,0,0
 
-# Line 3: y: int
+# Line 7: y: int
 	.comm	y,4,4
-	.stabs	"y:G(0,1)",32,0,0,0
+
+# Line 8: z: int
+	.comm	z,4,4
+
+# Line 9: b1: boolean
+	.comm	b1,4,4
+
+# Line 10: b2: boolean
+	.comm	b2,4,4
 
 .text
 # -----------------------------------------
-# Line 5: start()
+# Line 12: start()
 # -----------------------------------------
 .global	main
-	.stabs	"main:F",36,0,0,main
 main:
 
 # -----------------------------------------
-# Line 7: x := 5
+# Line 14: x := 5
 # -----------------------------------------
-	.stabn	68,0,7,.line7-main
-.line7:
         # Evaluate RHS ...
         pushl    $5
         # Now, do the assignment...
         popl    x
 
 # -----------------------------------------
-# Line 8: y := 3+x
+# Line 15: y := x*(8-x)
 # -----------------------------------------
-	.stabn	68,0,8,.line8-main
-.line8:
         # Evaluate RHS ...
-        pushl    $3
         pushl    x
-        call    add
+        pushl    $8
+        pushl    x
+        call    sub
+        addl    $8, %esp
+        push    %eax
+        call    mul
         addl    $8, %esp
         push    %eax
         # Now, do the assignment...
         popl    y
 
 # -----------------------------------------
-# Line 9: out.writeint()
+# Line 17: b1 := true
 # -----------------------------------------
-	.stabn	68,0,9,.line9-main
-.line9:
-        pushl    x
+        # Evaluate RHS ...
+        pushl    $1
+        # Now, do the assignment...
+        popl    b1
+
+# -----------------------------------------
+# Line 18: b2 := notfalse
+# -----------------------------------------
+        # Evaluate RHS ...
+        pushl    $0
+        popl    %eax
+        xorl    $1, %eax
+        pushl    %eax
+        # Now, do the assignment...
+        popl    b2
+
+# -----------------------------------------
+# Line 19: b2 := not(notb2orb1)
+# -----------------------------------------
+        # Evaluate RHS ...
+        pushl    b2
+        popl    %eax
+        xorl    $1, %eax
+        pushl    %eax
+        pushl    b1
+        call    or
+        addl    $8, %esp
+        push    %eax
+        popl    %eax
+        xorl    $1, %eax
+        pushl    %eax
+        # Now, do the assignment...
+        popl    b2
+
+# -----------------------------------------
+# Line 21: out.writeint()
+# -----------------------------------------
+        pushl    y
         call    writeint
         addl    $4, %esp
 
 # -----------------------------------------
-# Line 10: end start
+# Line 22: out.writeint()
 # -----------------------------------------
-	.stabn	68,0,10,.line10-main
-.line10:
+        pushl    x
+        pushl    $2
+        call    div
+        addl    $8, %esp
+        push    %eax
+        call    writeint
+        addl    $4, %esp
+
+# -----------------------------------------
+# Line 24: y := y-x
+# -----------------------------------------
+        # Evaluate RHS ...
+        pushl    y
+        pushl    x
+        call    sub
+        addl    $8, %esp
+        push    %eax
+        # Now, do the assignment...
+        popl    y
+
+# -----------------------------------------
+# Line 25: out.writeint()
+# -----------------------------------------
+        pushl    y
+        pushl    $4
+        call    add
+        addl    $8, %esp
+        push    %eax
+        call    writeint
+        addl    $4, %esp
+
+# -----------------------------------------
+# Line 26: out.writeint()
+# -----------------------------------------
+        pushl    $9
+        pushl    $5
+        call    sub
+        addl    $8, %esp
+        push    %eax
+        call    neg
+        addl    $4, %esp
+        pushl    %eax
+        call    writeint
+        addl    $4, %esp
+
+# -----------------------------------------
+# Line 27: out.writeint()
+# -----------------------------------------
+        pushl    $5
+        pushl    $2
+        pushl    $3
+        call    mul
+        addl    $8, %esp
+        push    %eax
+        call    sub
+        addl    $8, %esp
+        push    %eax
+        pushl    $1
+        call    add
+        addl    $8, %esp
+        push    %eax
+        call    writeint
+        addl    $4, %esp
+
+# -----------------------------------------
+# Line 28: end start
+# -----------------------------------------
         pushl     $0
         call    exit
