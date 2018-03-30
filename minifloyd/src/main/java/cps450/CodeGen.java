@@ -67,6 +67,12 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 			Type newType = visit(metDecl);
 		}
 		
+		
+		
+		this.emitInst("pushl", " $0", null);
+		this.emitInst("call", "exit", null);
+		
+		
 		this.createAssemblyFile();
 
 		return null;
@@ -142,10 +148,6 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 			this.emitDir(".stabn", "68,0," + lineMe + ",.line" + lineMe + "-" + this.curMethName);
 			this.emitLab(".line" + lineMe + ":");
 		}
-		
-		
-		this.emitInst("pushl", " $0", null);
-		this.emitInst("call", "exit", null);
 
 		return null;
 	}
