@@ -56,7 +56,7 @@ public final class SymbolTable {
 	public boolean lookupInScope(String newName, int newScope) {
 		boolean found = false;
 
-		if(this.symbolAL.size() > 0 && this.symbolAL.get(newScope).containsKey(newName)) {
+		if(this.symbolAL.size() > newScope && this.symbolAL.get(newScope).containsKey(newName)) {
 			found = true;
 		}
 

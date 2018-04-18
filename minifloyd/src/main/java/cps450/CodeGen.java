@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import org.antlr.v4.runtime.Token;
@@ -18,10 +19,13 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	int ifNumGlob;
 	int ifNumLoc;
 	int loopNumGlob;
+	
 	Options options;
-	boolean gFlag;
-	String curMethName;
-
+	String curMethName = null;
+	String curClsName = null;
+	
+	ObjReference orInstance = null;
+	
 	public CodeGen(String newFileName, Options newOptions) {
 		this.fileName = newFileName;
 		this.instrucs = new ArrayList<>();
@@ -29,8 +33,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.ifNumLoc = -1;
 		this.loopNumGlob = -1;
 		this.options = newOptions;
-		this.gFlag = this.options.sourceLevDebug;
-		this.curMethName = "";
+		
+		orInstance = ObjReference.getInstance();
 	}
 
 	@Override
@@ -44,15 +48,6 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.emitnewLin();
 		this.emitnewLin();
 
-		
-		if (this.gFlag) {
-			this.emitDir(".file", "\"" + this.fileName + "\"");
-			this.emitDir(".stabs", "\"" + this.fileName + "\",100,0,0,.Ltext0");
-			this.emitDir(".text", "");
-			this.emitLab(".Ltext0:");
-			this.emitDir(".stabs", "\"int:t(0,1)=r(0,1);-2147483648;2147483647;\",128,0,0,0");
-		}
-
 		this.emitLab(".data");
 		
 		for (FloydParser.Var_declContext varDecl : ctx.claVarDecs) {
@@ -60,8 +55,10 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		}
 		
 
-
 		this.emitLab(".text");
+		
+		//Setting the class
+		this.curClsName = ctx.idClS.getText();
 
 		for (FloydParser.Method_declContext metDecl : ctx.claMetDecs) {
 			Type newType = visit(metDecl);
@@ -76,23 +73,26 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	public Type visitVar_decl(FloydParser.Var_declContext ctx) {
 
 		String varName = ctx.IDENTIFIER().getText();
-		Token tok = (Token) ctx.IDENTIFIER().getPayload();
-		String colon = ctx.COLON().getText() + " ";
-
-		
-		this.emitComm(tok.getLine(), varName, colon, ctx.type().getText());
-		this.emitDir(".comm", varName + ",4,4");
-		if (this.gFlag) {
-			this.emitDir(".stabs", "\"" + varName + ":G(0,1)\",32,0,0,0");
+		int position = findVariablePosition(varName);
+		if(position == 0) {
+			Token tok = (Token) ctx.IDENTIFIER().getPayload();
+			String colon = ctx.COLON().getText() + " ";
+			
+			this.emitComm(tok.getLine(), varName, colon, ctx.type().getText());
+			this.emitDir(".comm", varName + ",4,4");
+			this.emitnewLin();
 		}
-		this.emitnewLin();
-
+		
 		return null;
 	}
 
 	@Override
-	public Type visitMethod_decl(FloydParser.Method_declContext ctx) {
+	public Type visitMethod_decl(FloydParser.Method_declContext ctx) {	
 
+		this.emitnewLin();
+		this.emitnewLin();
+		this.emitnewLin();
+		
 		int lineMs = ctx.idMeS.getLine();
 		String methName = ctx.idMeS.getText();
 		this.emitComm();
@@ -101,24 +101,53 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 
 		if ((methName).equals("start")) {
 			this.emitLab(".global	main");
-			this.curMethName = "main";
-			if (this.gFlag) {
-				this.emitDir(".stabs", "\"main:F\",36,0,0,main");
-			}
+			//this.curMethName = "main";
 			this.emitLab("main:");
 		} else {
 			this.emitLab(".global	" + methName);
-			this.curMethName = methName;
-			if (this.gFlag) {
-				this.emitDir(".stabs", "\"" + methName + ":F\",36,0,0," + methName);
-			}
+			//this.curMethName = methName;
 			this.emitLab(methName + ":");
 		}
-
-		for (FloydParser.Var_declContext metVarDecl : ctx.metVarDecs) {
-			System.out.println("Need to print here in visitMethod_decl() -> metVarDecs");
+		
+		curMethName = methName;
+		ClassDecl clsDec = this.orInstance.classesMap.get(curClsName);
+		MethodDecl methDec = clsDec.methods.get(methName);
+		
+		//Parameters
+		/*int parameters = 4;
+		if(ctx.argument_decl_list() != null ) {
+			for (FloydParser.Argument_declContext metVarDecl : ctx.argument_decl_list().argsDec) {
+				String capi = metVarDecl.IDENTIFIER().getText();
+				parameters+=4;
+				
+			}
+		}*/
+		
+		
+		//Preamble
+		this.emitInst("pushl", "%ebp", null);
+		this.emitInst("movl", "%esp", "%ebp");
+		
+		if(methDec.localVars.size() > 0) {
+			int size = methDec.localVars.size();
+			this.emitInst("subl", "$" + size*4, "%esp");
 		}
-
+		
+		
+		//Local variables
+		for(FloydParser.Var_declContext varDecl: ctx.metVarDecs) {
+			String locVarName = varDecl.IDENTIFIER().getText();
+			VarDecl varDec = methDec.localVars.get(locVarName);
+			int pos = varDec.position;
+			if(varDec.type == Type.INT) {
+				//movl	$3, -4(%ebp)
+				this.emitInst("movl", "$0", pos + "(%ebp)");
+			}
+		}
+		
+		
+		
+		//Statement lists
 		if (ctx.statement_list() != null) {
 			for (FloydParser.StatementContext stmts : ctx.statement_list().stmts) {
 				
@@ -131,21 +160,24 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 			}
 		}
 		
-		int lineMe = ctx.idMeE.getLine();
+		//Postlude
+		this.emitInst("movl", "-4(%ebp)", "%eax");
+		this.emitInst("movl", "%ebp", "%esp");
+		this.emitInst("popl", "%ebp", null);
+		this.emitInst("ret", "", null);
 		
-		this.emitnewLin();
-		this.emitComm();
-		this.emitComm(lineMe, "end ", ctx.idMeE.getText() );
-		this.emitComm();
 		
-		if(this.gFlag) {
-			this.emitDir(".stabn", "68,0," + lineMe + ",.line" + lineMe + "-" + this.curMethName);
-			this.emitLab(".line" + lineMe + ":");
+		if ((methName).equals("start")) {
+			int lineMe = ctx.idMeE.getLine();
+			
+			this.emitnewLin();
+			this.emitComm();
+			this.emitComm(lineMe, "end ", ctx.idMeE.getText() );
+			this.emitComm();
+			
+			this.emitInst("pushl", " $0", null);
+			this.emitInst("call", "exit", null);
 		}
-		
-		
-		this.emitInst("pushl", " $0", null);
-		this.emitInst("call", "exit", null);
 
 		return null;
 	}
@@ -161,17 +193,17 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		String varName = ctx.IDENTIFIER().getText();
 		int lineNum = tok.getLine();
+		
+		
+		//Will look in current method for the variable
+		varName = findVariableValue(varName);
+		
 
 		this.emitnewLin();
 		this.emitComm();
 		this.emitComm(lineNum, varName, " := ", ctx.e2.getText());
 		this.emitComm();
 		
-		if(this.gFlag) {
-			this.emitDir(".stabn", "68,0," + lineNum + ",.line" + lineNum + "-" + this.curMethName);
-			this.emitLab(".line" + lineNum + ":");
-		}
-
 
 		this.emitComm("# Evaluate RHS ...");
 		Type newType = visit(ctx.e2);
@@ -277,10 +309,6 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.emitComm(lineNum, ctx.expression().getText(), ".", methName + "()");
 		this.emitComm();
 		
-		if(this.gFlag) {
-			this.emitDir(".stabn", "68,0," + lineNum + ",.line" + lineNum + "-" + this.curMethName);
-			this.emitLab(".line" + lineNum + ":");
-		}
 		
 		newType = visit(ctx.expression_list());
 
@@ -520,9 +548,13 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitIdTerm(FloydParser.IdTermContext ctx) {
 		String var = ctx.getText();
+		
+		//Will look in current method for the variable
+		var = findVariableValue(var);
+		
 		this.emitInst("pushl", var, null);
 		
-		return Type.ERROR;
+		return Type.OBJ;
 	}
 
 	@Override
@@ -556,6 +588,52 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		return newType;
 	}
 
+	
+	
+	
+	////////////////////////////////////////////
+	// Helpful Methods
+	////////////////////////////////////////////
+	public String findVariableValue(String varName) {
+		
+		ClassDecl clsDec = this.orInstance.classesMap.get(this.curClsName);
+		MethodDecl methDec = clsDec.methods.get(curMethName);
+		
+		if (methDec.parameters.containsKey(varName) ) {
+			VarDecl varDec = methDec.parameters.get(varName);
+			varName = varDec.position + "(%ebp)";
+		} else if (methDec.localVars.containsKey(varName)) {
+			VarDecl varDec = methDec.localVars.get(varName);
+			varName = varDec.position + "(%ebp)";
+		}
+		//Else it the variable must be global
+		
+		return varName;
+	}
+	
+	public int findVariablePosition(String varName) {
+		int position = 0;
+		ClassDecl clsDec = this.orInstance.classesMap.get(this.curClsName);
+		
+		if(this.curClsName == null) {
+			return position;
+		}
+		
+		MethodDecl methDec = clsDec.methods.get(curMethName);
+		
+		if (methDec.parameters.containsKey(varName) ) {
+			VarDecl varDec = methDec.parameters.get(varName);
+			position = varDec.position;
+		} else if (methDec.localVars.containsKey(varName)) {
+			VarDecl varDec = methDec.localVars.get(varName);
+			position = varDec.position;
+		}
+		
+		return position;
+	}
+	
+	
+	
 	
 
 	////////////////////////////////////////////

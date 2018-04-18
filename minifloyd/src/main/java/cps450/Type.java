@@ -7,7 +7,8 @@ public class Type {
 		INT = new Type("int"),
 		BOOLEAN = new Type("boolean"),
 		STRING = new Type("string"),
-		VOID = new Type("void");
+		VOID = new Type("void"),
+		OBJ = new Type("object");
 
 	protected String name;
 
