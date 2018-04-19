@@ -1,24 +1,29 @@
-~ CBasics.floyd
-~ - Tests C-level parameter passing and variable access
-~ - Expected output: 0 10 20 0 10 -5 0 10 20 -5 25
 
-class CBasics is
-  d: int  
+
+class CIterfact is
+
+  num: int
+  num2: int
+  isOk: boolean
+
+  Fact(num: int): int is
+    answer: int
+  begin
+    answer := 1
+    loop while num > 0
+      answer := answer * num
+      num := num - 1
+    end loop
+    Fact := answer
+    out.writeint(0 + answer - answer)  ~ see if we can mess up return value -- heh heh heh
+  end Fact
 
   start() is
-    num: int
-    x: int
-    y: int
   begin 
-    x := 10
-    y := 20
-    out.writeint(num)  ~ should be 0
-    out.writeint(x) ~ 10
-    out.writeint(y) ~ 20    
-    out.writeint(d) ~ 0
-    out.writeint(d) ~ -5
-    out.writeint(num) ~ 25
-    
+    num := in.readint()
+    if num > 0 then
+      num := Fact(num)
+      out.writeint(num)
+    end if
   end start
-end CBasics
-
+end CIterfact

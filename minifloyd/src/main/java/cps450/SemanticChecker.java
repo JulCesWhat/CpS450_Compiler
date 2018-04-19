@@ -13,8 +13,6 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	SymbolTable sblTable;
 	String fileName;
 	
-	//Will have to remove the classDec soon
-	ClassDecl classDec = null;	
 	Stack<String> methTempNames = null;
 	
 	String nameClass = null;
@@ -64,7 +62,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 			System.out.println("failure to define exactly one class in a source file");
 		} else {
 			for(FloydParser.Class_declContext classDecl : ctx.classes) {
-				Type something = visit(ctx.classes.get(0));
+				Type something = visit(classDecl);
 			}
 		}
 		
@@ -74,25 +72,24 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	@Override
   	public Type visitClass_decl(FloydParser.Class_declContext ctx) {
   		
-  		if(ctx.idClIn != null) {
-  			this.printErrorNT(ctx.idClIn.getLine(), ctx.idClIn.getCharPositionInLine(), "feature unsupported");
-  		} else if(!ctx.idClS.getText().equals(ctx.idClE.getText())) {
+  		if(!ctx.idClS.getText().equals(ctx.idClE.getText())) {
   			System.out.println("failure to define exactly one class in a source file capi");
   		} else if(ctx.idClS.getText() == "int" || ctx.idClS.getText() == "string" || ctx.idClS.getText() == "boolean") {
   			System.out.println("failure to define class that is not a type");
   		} else {
-  			this.classDec = new ClassDecl();
-  			
-  			
   			
   			ClassDecl clsDec = new ClassDecl();
   			nameClass = ctx.idClS.getText();
   			
-  			int i = 1;	//Position
+  			//Instantiate New Scope
+  			this.sblTable.push(nameClass, clsDec);
+  			this.sblTable.beginNewScope();
+  			
+
   			//Class variables
   			for (FloydParser.Var_declContext varDecl : ctx.claVarDecs) {
   				Type newType = visit(varDecl);
-  				clsDec.glovalVars.put(varDecl.IDENTIFIER().getText(), new VarDecl(newType, i));
+  				clsDec.glovalVars.put(varDecl.IDENTIFIER().getText(), new VarDecl(newType));
   			}
   			this.orInstance.classesMap.put(nameClass, clsDec);
   			
@@ -100,6 +97,13 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   			for (FloydParser.Method_declContext metDecl : ctx.claMetDecs) {
   				Type newType = visit(metDecl);
   			}
+  			
+  			
+  			try {
+  	  	  		this.sblTable.endScope();
+  	  		} catch(Exception ex){
+  	  			System.out.println(ex);
+  	  		}
   			
   			nameClass = null;
   		}
@@ -122,7 +126,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 
 				} else {
 					newType = visit(ctx.type());
-					Symbol newSymbol = this.sblTable.push(varName, new VarDecl(newType));
+					this.sblTable.push(varName, new VarDecl(newType));
 
 				}
 			} else {
@@ -146,26 +150,28 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	
   	@Override
   	public Type visitMethod_decl(FloydParser.Method_declContext ctx) {
-  		this.sblTable.beginScope();
-
   		
+  		int locVarPos = 0;
   		if(!(ctx.idMeS.getText()).equals(ctx.idMeE.getText())) {
   			System.out.println("Method not declared correctly");
-  		} else if(!(ctx.idMeS.getText()).equals("start")) {
-  			this.printErrorNT(ctx.idMeS.getLine(), ctx.idMeE.getCharPositionInLine(), "feature unsupported");
   		}
   		
+ 
+  		//If it goes through the method returns a value
   		Type methType = Type.VOID;
   		if(ctx.COLON() != null) {
-  			Type newType = visit(ctx.type());
-  			methType = newType;
+  			methType = visit(ctx.type());
+  			locVarPos = -4;
   		}
   		
   		
   		MethodDecl method = new MethodDecl(methType);
   		String methodName = ctx.idMeS.getText();
   		
-  		int i = 8;
+  		this.sblTable.push(methodName, method);
+  		this.sblTable.beginNewScope();
+  		
+  		int i = 8;  		
   		//Parameters
   		if(ctx.argument_decl_list() != null) {
   	  		for (FloydParser.Argument_declContext argsDecl : ctx.argument_decl_list().argsDec) {
@@ -176,6 +182,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	  				Type newType = visit(argsDecl);
   	  				VarDecl var = new VarDecl(newType, i);
   	  				method.parameters.put(argName, var);
+  	  				this.sblTable.push(argName, var);
   	  			} else {
   	  				Token tok = (Token) argsDecl.IDENTIFIER().getPayload();
   	  				String error = "Redefined identifier " + argName;
@@ -185,7 +192,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   	  		}
   		}
   		
-  		i = -4;
+  		i = -4 + locVarPos;
   		//Local variables
   		for (FloydParser.Var_declContext metVarDecl : ctx.metVarDecs) {
 			Type newType = visit(metVarDecl);
@@ -202,9 +209,6 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
   				Type newType = visit(stmts);
   			}
   		}
-  		
-  		//Will have to delete this soon
-  		this.classDec.methods.put(methodName, method);
   		
  
   		ClassDecl clsDec = this.orInstance.classesMap.get(nameClass);
@@ -343,11 +347,11 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public Type visitExpression_list(FloydParser.Expression_listContext ctx) {
 		String methName = this.methTempNames.pop();
 		
-		MethodDecl method = this.classDec.methods.get(methName);
-		if(method == null) {
-			Symbol newSymbol = this.sblTable.lookup(methName);
-			method = (MethodDecl) newSymbol.getAttributes();
-		}
+		//Might have to do something here
+		Symbol fndSym =  this.sblTable.lookup(methName);
+		MethodDecl method = (MethodDecl) fndSym.getAttributes();
+
+
 		Type newType = method.type;
 		boolean errFlag = false;
 		int paramPos = 0;
@@ -356,7 +360,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 			Type curType = visit(expr);
 
 			if (paramPos < method.parameters.size()) {
-				VarDecl newVar = method.parameters.get(paramPos);
+				VarDecl newVar = method.getParamByPos(paramPos);
 				Type paramType = newVar.type;
 
 				if (!(paramType.name).equals(curType.name)) {
@@ -579,9 +583,16 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 			if(newSymbol == null) {
 				Token newToken = (Token) ctx.IDENTIFIER().getPayload();
 				this.printError(newToken, "Undeclared identifier " + methName);
-			} else if(ctx.expression_list() != null) {
+			} else {
 				this.methTempNames.push(methName);
-				newType = visit(ctx.expression_list());
+				
+				MethodDecl methDec = (MethodDecl) newSymbol.getAttributes();
+				newType = methDec.type;
+				
+				
+				//Might have to check for parameters... maybe
+				//newType = visit(ctx.expression_list());
+				//if(ctx.expression_list() != null)
 			}
 		}
 		
@@ -593,17 +604,20 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		Type newType = null;
 		
 		String methName = ctx.IDENTIFIER().getText();
-		if (!this.classDec.methods.containsKey(methName)) {
+		
+		if (this.sblTable.lookup(methName) == null) {
 			Token tok = (Token) ctx.IDENTIFIER().getPayload();
 			this.printError(tok, "Undefined function " + methName);
 		} else {
+			Symbol symb = this.sblTable.lookup(methName);
+			MethodDecl method = (MethodDecl) symb.getAttributes();
+			newType = method.type;
+			
 			//This will run if it has parameters
+			//I don't think we need this.
 			if(ctx.expression_list() != null) {
 				this.methTempNames.push(methName);
-				newType = visit(ctx.expression_list());
-			} else {
-				MethodDecl method = this.classDec.methods.get(methName);
-				newType = method.type;
+				//newType = visit(ctx.expression_list());
 			}
 		}
 		
@@ -711,4 +725,24 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 		System.err.println(this.fileName + ":" + line + "," + col + ":" + error);
 	}
+
+	
+	////////////////////////////////////////////
+	// Helpful Methods
+	////////////////////////////////////////////
+	public VarDecl findVariable(String methName) {
+
+		return null;
+	}
+	
+	public MethodDecl findMethod(String methName) {
+
+		return null;
+	}
+	
+	public ClassDecl findClass(String className) {
+
+		return null;
+	}
+	
 }

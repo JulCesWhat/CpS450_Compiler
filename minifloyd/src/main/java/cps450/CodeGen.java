@@ -128,19 +128,32 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.emitInst("pushl", "%ebp", null);
 		this.emitInst("movl", "%esp", "%ebp");
 		
+
+		//Saving space for local variables
 		if(methDec.localVars.size() > 0) {
-			int size = methDec.localVars.size();
-			this.emitInst("subl", "$" + size*4, "%esp");
+			if(methDec.type != Type.VOID) {
+				//If the method has a return value
+				int size = methDec.localVars.size() + 1;
+				this.emitInst("subl", "$" + size*4, "%esp");
+				this.emitInst("movl", "$0", "-4(%ebp)");
+			} else {
+				int size = methDec.localVars.size();
+				this.emitInst("subl", "$" + size*4, "%esp");
+			}
+		} else {
+			if(methDec.type != Type.VOID) {
+				this.emitInst("subl", "$4", "%esp");
+				this.emitInst("movl", "$0", "-4(%ebp)");
+			}
 		}
 		
 		
-		//Local variables
+		// Instantiating local variables
 		for(FloydParser.Var_declContext varDecl: ctx.metVarDecs) {
 			String locVarName = varDecl.IDENTIFIER().getText();
 			VarDecl varDec = methDec.localVars.get(locVarName);
 			int pos = varDec.position;
-			if(varDec.type == Type.INT) {
-				//movl	$3, -4(%ebp)
+			if(varDec.type == Type.INT || varDec.type == Type.BOOLEAN) {
 				this.emitInst("movl", "$0", pos + "(%ebp)");
 			}
 		}
@@ -161,7 +174,11 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		}
 		
 		//Postlude
-		this.emitInst("movl", "-4(%ebp)", "%eax");
+		this.emitnewLin();
+		if(methDec.type != Type.VOID) {
+			this.emitInst("movl", "-4(%ebp)", "%eax");	
+		}
+		
 		this.emitInst("movl", "%ebp", "%esp");
 		this.emitInst("popl", "%ebp", null);
 		this.emitInst("ret", "", null);
@@ -300,20 +317,36 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitCall_stmt(FloydParser.Call_stmtContext ctx) {
 		Type newType = null;
-		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		String methName = ctx.IDENTIFIER().getText();
+		Token tok = (Token) ctx.IDENTIFIER().getPayload();
 		int lineNum = tok.getLine();
 		
+		
+		//Setting name is class or local method
 		this.emitnewLin();
 		this.emitComm();
-		this.emitComm(lineNum, ctx.expression().getText(), ".", methName + "()");
+		if(ctx.POINT() != null) {
+			this.emitComm(lineNum, ctx.expression().getText(), ".", methName + "()");
+		} else {
+			this.emitComm(lineNum, "", "", methName + "()");
+			ClassDecl clsDec = this.orInstance.classesMap.get(this.curClsName);
+			MethodDecl methDec = clsDec.methods.get(methName);
+			newType = methDec.type;
+		}
 		this.emitComm();
 		
 		
-		newType = visit(ctx.expression_list());
+		//If method has parameters and the return type does not matter
+		if(ctx.expression_list() != null) {
+			Type noMatterType = visit(ctx.expression_list());
+		}
 
 		this.emitInst("call", methName, null);
-		this.emitInst("addl", "$4", "%esp");
+		
+		if(ctx.expression_list() != null) {
+			int params = ctx.expression_list().expression().size();
+			this.emitInst("addl", "$" + params * 4, "%esp");
+		}
 
 		return newType;
 	}
@@ -326,9 +359,11 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitExpression_list(FloydParser.Expression_listContext ctx) {
 		
-		for (FloydParser.ExpressionContext expr : ctx.expr) {
+		for(int i = ctx.expr.size() - 1; i > -1; i--) {
+			FloydParser.ExpressionContext expr = ctx.expr.get(i);
 			visit(expr);
 		}
+	
 		return null;
 	}
 	
@@ -353,7 +388,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 
 					this.emitInst("call", "or", null);
 					this.emitInst("addl", "$8", "%esp");
-					this.emitInst("push", "%eax", null);
+					this.emitInst("pushl", "%eax", null);
 				}
 
 			}
@@ -400,7 +435,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 			}
 
 			this.emitInst("addl", "$8", "%esp");
-			this.emitInst("push", "%eax", null);
+			this.emitInst("pushl", "%eax", null);
 		} else {
 			newType = visit(ctx.strExpr1);
 		}
@@ -426,6 +461,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitAdd_sub_expr(FloydParser.Add_sub_exprContext ctx) {
 		Type newType = null;
+		ArrayList<String> values = new ArrayList<String>();
+		
 		if (ctx.mdExpr.size() > 1) {
 
 			for (int i = 0; i < ctx.mdExpr.size(); i++) {
@@ -444,7 +481,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 					}
 
 					this.emitInst("addl", "$8", "%esp");
-					this.emitInst("push", "%eax", null);
+					this.emitInst("pushl", "%eax", null);
 				}
 			}
 
@@ -477,7 +514,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 
 
 					this.emitInst("addl", "$8", "%esp");
-					this.emitInst("push", "%eax", null);
+					this.emitInst("pushl", "%eax", null);
 				}
 			}
 
@@ -519,6 +556,7 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		this.emitInst("call", methName, null);
 		this.emitInst("pushl", "%eax", null);
 
+
 		return null;
 	}
 
@@ -529,7 +567,36 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitMethExpr(FloydParser.MethExprContext ctx) {
 		Type newType = null;
+		//Token tok = (Token) ctx.IDENTIFIER().getPayload();
+		String methName = ctx.IDENTIFIER().getText();
+		//int lineNum = tok.getLine();
 		
+		
+		ClassDecl clasDec = this.orInstance.classesMap.get(this.curClsName);
+		MethodDecl methDec = clasDec.methods.get(methName);
+		int params = methDec.parameters.size();
+				
+		
+	/*	this.emitnewLin();
+		this.emitComm();
+		this.emitComm(lineNum, "", "", methName + "()");
+		this.emitComm();
+		*/
+		
+		newType = visit(ctx.expression_list());
+
+		this.emitInst("call", methName, null);
+		
+		//If method has parameters
+		if(params > 0) {
+			this.emitInst("addl", "$" + params * 4, "%esp");	
+		}
+		
+		// IF method has return value
+		if(methDec.type != Type.VOID) {
+			this.emitInst("pushl", "%eax", null);
+		}
+
 		return newType;
 	}
 
@@ -605,6 +672,8 @@ public class CodeGen extends FloydBaseVisitor<Type> {
 		} else if (methDec.localVars.containsKey(varName)) {
 			VarDecl varDec = methDec.localVars.get(varName);
 			varName = varDec.position + "(%ebp)";
+		} else if(methDec.type != Type.VOID && varName.equals(curMethName)) {
+			varName = "-4(%ebp)";
 		}
 		//Else it the variable must be global
 		

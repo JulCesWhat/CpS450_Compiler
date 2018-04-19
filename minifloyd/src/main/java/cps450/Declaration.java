@@ -1,6 +1,7 @@
 package cps450;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.ArrayList;;
 
 class Declaration {
@@ -32,6 +33,18 @@ class MethodDecl extends Declaration {
 		super.kind = "method";
 		this.localVars = new HashMap<>();
 		this.parameters = new HashMap<>();
+	}
+	
+	
+	public VarDecl getParamByPos(int position) {
+		for (Map.Entry<String, VarDecl> me : parameters.entrySet()) {
+			VarDecl fndVar = me.getValue();
+			if(position == (fndVar.position - 8)/4) {
+				return fndVar;
+			}
+	    }
+	
+		return null;
 	}
 }
 
