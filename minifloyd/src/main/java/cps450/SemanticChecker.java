@@ -42,7 +42,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		orInstance.classesMap.put("in", classIn);
 		
 		this.sblTable.push("in", classIn);
-		this.sblTable.push("readint", methReadInt);
+		//this.sblTable.push("readint", methReadInt);
 		
 		
 		//Adding the out class to your class holder
@@ -52,7 +52,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		orInstance.classesMap.put("out", classOut);
 		
 		this.sblTable.push("out", classOut);
-		this.sblTable.push("writeint", methWriteInt);
+		//this.sblTable.push("writeint", methWriteInt);
 	}
 	
 	@Override
@@ -265,29 +265,31 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	//Statement
 	@Override
 	public Type visitAssignment_stmt(FloydParser.Assignment_stmtContext ctx) {
-		if(ctx.e1 != null) {
+		if (ctx.e1 != null) {
 			Token tok = (Token) ctx.e1.getPayload();
 			this.printError(tok, "feature unsupported");
 		}
-		
+
 		String varName = ctx.IDENTIFIER().getText();
 		Symbol newSymbol = this.sblTable.lookup(varName);
-		if(newSymbol == null) {
+		if (newSymbol == null) {
 			Token newToken = (Token) ctx.IDENTIFIER().getPayload();
 			this.printError(newToken, "Undeclared identifier " + varName);
 		} else {
 			Type newType = visit(ctx.e2);
-			Declaration newVar = newSymbol.getAttributes();
-			String leftExp = newVar.type.name;
-			String rightExp = newType.name;
-			
-			if(!(rightExp).equals("<error>") && !(leftExp).equals(rightExp)) {
-				//Token tok = (Token) ctx.e2.getPayload();
-				//this.printError(tok, "cannot assign " + rightExp + " to " + leftExp);
-				System.out.println("cannot assign " + rightExp + " to " + leftExp + "  visitAssignment_stmt()");
-			}
+
+			if (newType != null) {
+				Declaration newVar = newSymbol.getAttributes();
+				String leftExp = newVar.type.name;
+				String rightExp = newType.name;
+
+				if (!(rightExp).equals("<error>") && !(leftExp).equals(rightExp)) {
+					Token tok = (Token) ctx.ASGOP().getPayload();
+					this.printError(tok, "cannot assign " + rightExp + " to " + leftExp);
+				}
+			} // Else will be handle by the visit to ctx.e2
 		}
-		
+
 		return null;
 	}
 	
@@ -499,13 +501,28 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		Type newType = null;
 		if(ctx.mdExpr.size() > 1) {
 
+			int posOp = 0;
+			int posExp = 0;
 			for (FloydParser.Mul_div_exprContext mdExprDecl : ctx.mdExpr) {
 				newType = visit(mdExprDecl);
-				if(!newType.name.equals("int")) {
-					System.out.println("Need to print Token <error> in visitAdd_sub_expr()");
+				if(newType != Type.INT && newType != Type.ERROR) {
+					FloydParser.Add_sub_opContext addsubOp = ctx.add_sub_op(posOp);
+					
+					//Doing this to be able to get the token
+					Token tok = null;
+					if(addsubOp.MINUS() != null) {
+						tok = (Token) addsubOp.MINUS().getPayload();
+					} else {
+						tok = (Token) addsubOp.PLUS().getPayload();
+					}
+					this.printError(tok, "the " + addsubOp.getText() + " op can only be used with ints and reals");
 					newType = Type.ERROR;
 					break;
 				}
+				if(posExp != 0) {
+					posOp++;
+				}
+				posExp++;
 			}
 		} else {
 			newType = visit(ctx.mdExpr.get(0));
@@ -519,14 +536,28 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		Type newType = null;
 		
 		if(ctx.unaExpr.size() > 1) {
-			
+			int posOp = 0;
+			int posExp = 0;
 			for (FloydParser.Unary_exprContext unaExprDecl : ctx.unaExpr) {
 				newType = visit(unaExprDecl);
-				if(!newType.name.equals("int")) {
-					System.out.println("Need to print Token <error> in visitMul_div_expr()");
+				if(newType != Type.INT && newType != Type.ERROR) {
+					FloydParser.Mul_div_opContext muldivOp = ctx.mul_div_op(posOp);
+					
+					//Doing this to be able to get the token
+					Token tok = null;
+					if (muldivOp.MUL() != null) {
+						tok = (Token) muldivOp.MUL().getPayload();
+					} else {
+						tok = (Token) muldivOp.DIV().getPayload();
+					}
+					this.printError(tok, "the " + muldivOp.getText() + " op can only be used with ints and reals");
 					newType = Type.ERROR;
 					break;
 				}
+				if(posExp != 0) {
+					posOp++;
+				}
+				posExp++;
 			}
 		} else {
 			newType = visit(ctx.unaExpr.get(0));
@@ -647,11 +678,12 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	@Override
 	public Type visitIdTerm(FloydParser.IdTermContext ctx) {
 		Type newType = null;
-		String name = ctx.getText();
+		String name = ctx.IDENTIFIER().getText();
 		Symbol newSymbol = this.sblTable.lookup(name);
 		
 		if (newSymbol == null) {
-			System.out.println("Use of undeclared variable " + name);
+			Token tok = (Token) ctx.IDENTIFIER().getPayload();
+			this.printError(tok, "Use of undeclared variable " + name);
 			newType = Type.ERROR;
 		} else {
 			Declaration newDeclaration = newSymbol.getAttributes();
@@ -710,7 +742,6 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		Type newType = visit(ctx.expression());
 		return newType;
 	}
-	
 	
 	
 	//Errors
