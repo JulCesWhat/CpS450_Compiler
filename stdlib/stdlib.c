@@ -109,6 +109,9 @@ void writeint(int num) {
     *writeptr++ = *pos;
     *writeptr++ = 10;
     *writeptr++ = 0;
+  } else {
+    // number is 0; use default result
+    writeptr = result + 3;
   }
   
   write(1, result, (writeptr - result) - 1);

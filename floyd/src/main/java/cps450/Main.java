@@ -24,7 +24,7 @@ public class Main
             System.exit(1);
         }
 
-        Options options = new Options(arguments);
+        Options options = Options.getInstance(arguments);
         
         if (options.getFilenames().size() == 0) {
         	System.err.println("You must supply a filename to parse.");
@@ -54,19 +54,18 @@ public class Main
         	System.out.println(parser.getNumberOfSyntaxErrors() + " syntax error(s)");
         else {
 
-        	//System.out.println("Walking tree with SemanticChecker...");
-        	//new SemanticChecker(options.getFilenames().get(0)).visit(tree);
+        	System.out.println("Walking tree with SemanticChecker...");
+        	new SemanticChecker(options.getFilenames().get(0)).visit(tree);
         	
-        	System.out.println("Walking tree with CodeGen...");
-        	new CodeGen(options.getFilenames().get(0), options).visit(tree);
-        	
+        	if(options.getSemanticErrors() == 0) {
+            	System.out.println("Walking tree with CodeGen...");
+            	new CodeGen(options.getFilenames().get(0), options).visit(tree);
+        	};
         }
         
         if (options.getParser())
         	// Display graphical tree
         	Trees.inspect(tree, parser);
-        
-        System.out.println("Finished doing the tree.");
     }
 
 }

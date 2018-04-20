@@ -1,6 +1,7 @@
 package cps450;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.ArrayList;;
 
 class Declaration {
@@ -9,6 +10,13 @@ class Declaration {
 }
 
 class VarDecl extends Declaration {
+	int position = 0;
+	public VarDecl(Type newType, int newPosition) {
+		super.type = newType;
+		super.kind = "variable";
+		this.position = newPosition;
+	}
+	
 	public VarDecl(Type newType) {
 		super.type = newType;
 		super.kind = "variable";
@@ -18,13 +26,25 @@ class VarDecl extends Declaration {
 class MethodDecl extends Declaration {
 	// more will go here eventually ...
 	public HashMap<String, VarDecl> localVars;
-	public ArrayList<VarDecl> parameters;
+	public HashMap<String, VarDecl> parameters;
 	
 	public MethodDecl(Type newType) {
 		super.type = newType;
 		super.kind = "method";
 		this.localVars = new HashMap<>();
-		this.parameters = new ArrayList<>();
+		this.parameters = new HashMap<>();
+	}
+	
+	
+	public VarDecl getParamByPos(int position) {
+		for (Map.Entry<String, VarDecl> me : parameters.entrySet()) {
+			VarDecl fndVar = me.getValue();
+			if(position == (fndVar.position - 8)/4) {
+				return fndVar;
+			}
+	    }
+	
+		return null;
 	}
 }
 

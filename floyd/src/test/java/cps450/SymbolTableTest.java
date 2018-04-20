@@ -19,7 +19,7 @@ public class SymbolTableTest extends TestCase {
 		Symbol s = table.push("s", new VarDecl(Type.INT));
 		assertTrue(s.getName().equals("s"));
 		
-		table.beginScope();
+		table.beginNewScope();
 		assertTrue(table.getScope() == 1);
 		
 		Symbol x = table.push("x", new VarDecl(Type.INT));
@@ -28,7 +28,7 @@ public class SymbolTableTest extends TestCase {
 		Symbol foundX = table.lookup("x");
 		assertNotNull(foundX);
 		
-		table.beginScope();
+		table.beginNewScope();
 		assertTrue(table.getScope() == 2);
 		
 		Symbol z = table.push("z", new VarDecl(Type.STRING));

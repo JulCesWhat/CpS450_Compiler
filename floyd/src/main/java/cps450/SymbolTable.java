@@ -53,17 +53,36 @@ public final class SymbolTable {
 		return null;
 	}
 	
+	//Looks up for a symbol 
+		public Symbol lookup(String name, Symbol parSbl) {
+			
+			for(int i = symbolAL.size() -1; i > -1; i--) {
+				if(symbolAL.get(i).containsKey(name)) {
+					Symbol fndSbl = symbolAL.get(i).get(name);
+					Declaration fndDec = fndSbl.getAttributes();
+					
+					Declaration parDec = parSbl.getAttributes();
+					if(parDec.kind.equals(fndDec.kind)) {
+						return fndSbl;
+					}
+					//return symbolAL.get(i).get(name);
+				}
+			}
+			
+			return null;
+		}
+	
 	public boolean lookupInScope(String newName, int newScope) {
 		boolean found = false;
 
-		if(this.symbolAL.size() > 0 && this.symbolAL.get(newScope).containsKey(newName)) {
+		if(this.symbolAL.size() > newScope && this.symbolAL.get(newScope).containsKey(newName)) {
 			found = true;
 		}
 
 		return found;
 	}
 	
-	public void beginScope() {
+	public void beginNewScope() {
 		this.scope++;
 	}
 	
