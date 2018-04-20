@@ -21,12 +21,14 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	String assignMethCall = null;
 	ObjReference orInstance = null;
 	
+	Options optInstance = null;
 	
 	public SemanticChecker(String newFileName) {
 		this.sblTable = SymbolTable.getInstance();
 		this.fileName = newFileName;
 		
 		orInstance = ObjReference.getInstance();
+		this.optInstance = Options.getInstance(null);
 		
 		this.StartDefinedClasses();
 	}
@@ -202,16 +204,15 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 			i-=4;
 		}
   		
+  		ClassDecl clsDec = this.orInstance.classesMap.get(nameClass);
+  		clsDec.methods.put(methodName, method);
+  		this.orInstance.classesMap.put(nameClass, clsDec);
+  		
   		if(ctx.statement_list() != null) {
   			for (FloydParser.StatementContext stmts : ctx.statement_list().stmts) {
   				Type newType = visit(stmts);
   			}
   		}
-  		
- 
-  		ClassDecl clsDec = this.orInstance.classesMap.get(nameClass);
-  		clsDec.methods.put(methodName, method);
-  		this.orInstance.classesMap.put(nameClass, clsDec);
   		
   		try {
   	  		this.sblTable.endScope();
@@ -907,12 +908,12 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public void printError(Token newToken, String error) {
 		int line =  newToken.getLine();
 		int col = newToken.getCharPositionInLine();
-	
+		this.optInstance.addSemanticErrors();
 		System.err.println(this.fileName + ":" + line + "," + col + ":" + error);
 	}
 	
 	public void printErrorNT(int line, int col, String error) {
-	
+		this.optInstance.addSemanticErrors();
 		System.err.println(this.fileName + ":" + line + "," + col + ":" + error);
 	}
 	

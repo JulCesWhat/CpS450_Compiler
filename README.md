@@ -1,14 +1,14 @@
 # CpS 450
 
-This repository contains CpS 450 Class Files for Phase4.
+This repository contains CpS 450 Class Files for Phase5. The projec is complete with the C version.
 
 # Number of hours spent on project
 
-15 hours spent on project.
+20 hours spent on project.
 
 # Known bugs
 
-Everything should be working perfectly.
+All the basic test pass from phase 1 to phase 5 and no known bugs for the C version of the project.
 
 # Academic integrity
 

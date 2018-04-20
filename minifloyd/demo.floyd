@@ -1,30 +1,29 @@
-~ test0.f
-~ Tests scalar type checking with assignment stmts
+~
+~ stmt1.floyd
+~ - Tests semantics of statements
+~
 
-class test0 is
+class stmt1 is
 
-  b1: boolean
-  b2: boolean
-  
-  b3: boolean
-  
-  i1: int
-  i2: int
+  x: int
 
   start() is
   begin
+    loop while true
+      x := x + 1
+    end loop
   
-    b1 := true
-    b2 := not b1 and true
-    b3 := i1 > i2
-    b2 := false
-    b3 := b1 or true
+    if false then
+      x := x - 1
+    end if
   
-    i1 := 10
-    i1 := 10 * i2 - i1
-    i1 := 0 + (3 - 4) * -1
-    i1 := 10 + i2 - i1
-    
+    loop while 15 - 3   ~ ERROR: wrong type for while condition
+      x := x + 1
+    end loop
+  
+    if "Hello" then   ~ ERROR: wrong type for IF
+      x := x - 1
+    end if
   end start
 
-end test0
+end stmt1

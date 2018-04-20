@@ -6,11 +6,14 @@ import java.util.ArrayList;
 //for the compiler to work properly.
 
 public class Options {
-
+	
+	private static Options optsIntance = null;
+	
 	boolean debugScanner = false;
 	boolean debugParser = false;
 	boolean sourceLevDebug = false;
 	boolean createASM = false;
+	int semanticErrors = 0;
 	ArrayList<String> filenames = null;
 
 	public Options(String[] arguments) {
@@ -29,7 +32,22 @@ public class Options {
 				this.filenames.add(arg);
 		}
 	}
+	
+	public static Options getInstance(String[] arguments) {
+		if(optsIntance == null) {
+			optsIntance = new Options(arguments);
+		}
+		return optsIntance;
+	}
+	
+	public void addSemanticErrors(){
+		this.semanticErrors++;
+	}
 
+	public int getSemanticErrors() {
+		return this.semanticErrors;
+	}
+	
 	public boolean getScanner() {
 		return this.debugScanner;
 	}
