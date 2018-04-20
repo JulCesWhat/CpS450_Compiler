@@ -13,18 +13,18 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	SymbolTable sblTable;
 	String fileName;
 	
-	Stack<String> methTempNames = null;
-	
 	String nameClass = null;
-	String nameMethod = null;
-	String nameCallCls = null;
+	String idClsName = null;					//Used for PointMethExpr
+	String idVarName = null;
+	String methParamCall = null;	
+	Token methParamCallTok = null;
+	String assignMethCall = null;
 	ObjReference orInstance = null;
 	
 	
 	public SemanticChecker(String newFileName) {
 		this.sblTable = SymbolTable.getInstance();
 		this.fileName = newFileName;
-		this.methTempNames = new Stack<>();
 		
 		orInstance = ObjReference.getInstance();
 		
@@ -34,25 +34,23 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	private void StartDefinedClasses() {
 		
 		//Adding the in class to our class holder
-		VarDecl paramReadInt = new VarDecl(Type.INT, 0);
 		MethodDecl methReadInt = new MethodDecl(Type.INT);
-		methReadInt.parameters.put("in", paramReadInt);
 		ClassDecl classIn = new ClassDecl();
 		classIn.methods.put("readint", methReadInt);
 		orInstance.classesMap.put("in", classIn);
 		
 		this.sblTable.push("in", classIn);
-		//this.sblTable.push("readint", methReadInt);
 		
 		
 		//Adding the out class to your class holder
+		VarDecl paramWriteOut = new VarDecl(Type.INT, 8);
 		MethodDecl methWriteInt = new MethodDecl(Type.VOID);
+		methWriteInt.parameters.put("out", paramWriteOut);
 		ClassDecl classOut = new ClassDecl();
 		classOut.methods.put("writeint", methWriteInt);
 		orInstance.classesMap.put("out", classOut);
 		
 		this.sblTable.push("out", classOut);
-		//this.sblTable.push("writeint", methWriteInt);
 	}
 	
 	@Override
@@ -243,9 +241,6 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 
 	@Override
 	public Type visitStrType(FloydParser.StrTypeContext ctx) {
-		//Token tok = (Token) ctx.getPayload();
-		System.out.println("unsupported feature - visitStrType()");
-		//this.printError(tok, "feature unsupported");
 		return Type.STRING;
 	}
 	
@@ -268,6 +263,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		if (ctx.e1 != null) {
 			Token tok = (Token) ctx.e1.getPayload();
 			this.printError(tok, "feature unsupported");
+			return null;
 		}
 
 		String varName = ctx.IDENTIFIER().getText();
@@ -276,17 +272,33 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 			Token newToken = (Token) ctx.IDENTIFIER().getPayload();
 			this.printError(newToken, "Undeclared identifier " + varName);
 		} else {
+			// Using this for method check in return
+			this.assignMethCall = null;
+			
 			Type newType = visit(ctx.e2);
 
-			if (newType != null) {
+			if (newType != null && newType != Type.ERROR) {
 				Declaration newVar = newSymbol.getAttributes();
 				String leftExp = newVar.type.name;
 				String rightExp = newType.name;
 
-				if (!(rightExp).equals("<error>") && !(leftExp).equals(rightExp)) {
-					Token tok = (Token) ctx.ASGOP().getPayload();
-					this.printError(tok, "cannot assign " + rightExp + " to " + leftExp);
+				if (newVar.type != Type.ERROR && newVar.type != newType) {
+					
+					//We know that e2 must be a method call
+					if(this.assignMethCall != null) {
+						Token tok = (Token) ctx.ASGOP().getPayload();
+						if(newType != Type.VOID) {
+							this.printError(tok, "incompatible types for assignment");
+						} else {
+							this.printError(tok, rightExp + " method");
+						}
+					} else {
+						Token tok = (Token) ctx.ASGOP().getPayload();
+						this.printError(tok, "cannot assign " + rightExp + " to " + leftExp);
+					}
 				}
+				
+				this.methParamCall = null;
 			} // Else will be handle by the visit to ctx.e2
 		}
 
@@ -295,14 +307,43 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitIf_stmt(FloydParser.If_stmtContext ctx) {
+		Type typeOne = visit(ctx.expression());
+		Type typeThree = null;
 		
-		return null;
+		if(typeOne != Type.BOOLEAN) {
+			Token tok = ctx.ifS;
+			this.printError(tok, "wrong type for IF");
+			typeOne = Type.ERROR;
+		}
+		
+		Type typeTwo = visit(ctx.e1);
+		
+		// There must be an else part
+		if(ctx.ELSE() != null) {
+			typeThree = visit(ctx.e2);
+		}
+		
+		if(typeOne == Type.ERROR || typeTwo == Type.ERROR) {
+			typeOne = Type.ERROR;
+		}
+		
+		return typeOne;
 	}
 	
 	@Override
 	public Type visitLoop_stmt(FloydParser.Loop_stmtContext ctx) {
+		Type typeOne = visit(ctx.expression());
+		Type typeTwo = null;
 		
-		return null;
+		if(typeOne != Type.BOOLEAN) {
+			Token tok = (Token) ctx.WHILE().getPayload();
+			this.printError(tok, "wrong type for while condition");
+			typeOne = Type.ERROR;
+		}
+		
+		typeTwo = visit(ctx.statement_list());
+		
+		return typeOne;
 	}
 	
 	@Override
@@ -311,31 +352,88 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		String methName = ctx.IDENTIFIER().getText();
 
 		if (ctx.POINT() != null) {
+			this.idClsName = null;
+			this.idVarName = null;
 			// Setting flag for className
-			nameCallCls = "0";
 			Type clsType = visit(ctx.expression());
 
 			if (clsType != null) {
-				Symbol newSym = this.sblTable.lookup(methName);
-				if (newSym != null) {
-					MethodDecl methDecl = (MethodDecl) newSym.getAttributes();
-					newType = methDecl.type;
+				//The found item was either a variable or methodS
+				if(this.idClsName == null) {
+					Token tok = (Token) ctx.POINT().getPayload();
+					this.printError(tok, this.idVarName + " is not an object that contains " + methName);
 				} else {
-					// Method cannot be found
-					Token tok = (Token) ctx.IDENTIFIER().getPayload();
-					this.printError(tok, "Undefined function " + methName);
+					// The found item was a class
+					ClassDecl classDec = this.orInstance.classesMap.get(this.idClsName);
+					MethodDecl methDec = classDec.methods.get(methName);
+					if (methDec != null) {
+						Type methType = null;
+
+						// Information needed to check method paramters
+						this.methParamCall = methName;
+						this.methParamCallTok = (Token) ctx.IDENTIFIER().getPayload();
+
+						// This will run if it has parameters
+						if (ctx.expression_list() != null) {
+							methType = visit(ctx.expression_list());
+						} else if(methDec.parameters.size() > 0) {
+							Token tok = (Token) ctx.IDENTIFIER().getPayload();
+							this.printError(tok, "to few parameters");
+							methType = Type.ERROR;
+						}
+
+						newType = methDec.type;
+
+						// If parameter don't match... there will be an error
+						if (methType == Type.ERROR) {
+							newType = methType;
+						}
+
+						// Cleaning parameter checking information
+						this.methParamCall = null;
+						this.methParamCallTok = null;
+					} else {
+						// Method cannot be found
+						Token tok = (Token) ctx.IDENTIFIER().getPayload();
+						this.printError(tok, "no such " + methName + " method for " + this.idClsName);
+					}
 				}
 			} // else (error was printed in idCTX)
+			this.idClsName = null;
+			this.idVarName = null;
 		} else {
 			// Must be a method defined in local class
 			Symbol newSym = this.sblTable.lookup(methName);
 			if (newSym != null) {
 				MethodDecl methDecl = (MethodDecl) newSym.getAttributes();
+				Type methType = null;
+				
+				
+				//Information needed to check method paramters
+				this.methParamCall = methName;
+				this.methParamCallTok = (Token) ctx.IDENTIFIER().getPayload();
+				
+				this.assignMethCall = methName;
+				
 				newType = methDecl.type;
+				
+				//This will run if it has parameters
+				if(ctx.expression_list() != null) {
+					methType = visit(ctx.expression_list());
+				}
+				
+				//If parameter don't match... there will be an error
+				if(methType == Type.ERROR) {
+					newType = methType;
+				}
+				
+				//Cleaning parameter checking information
+				this.methParamCall = null;
+				this.methParamCallTok = null;
 			} else {
 				// Method cannot be found
 				Token tok = (Token) ctx.IDENTIFIER().getPayload();
-				this.printError(tok, "Undefined function " + methName);
+				this.printError(tok, "Undefined method " + methName);
 			}
 		}
 
@@ -347,50 +445,51 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	//Expression
 	@Override
 	public Type visitExpression_list(FloydParser.Expression_listContext ctx) {
-		String methName = this.methTempNames.pop();
+		String methName = this.methParamCall;
+		Token tok = this.methParamCallTok;
 		
-		//Might have to do something here
-		Symbol fndSym =  this.sblTable.lookup(methName);
-		MethodDecl method = (MethodDecl) fndSym.getAttributes();
+		ClassDecl classDec = null;
+		if(this.idClsName != null) {	// If this exprList belongs ot a point.method
+			classDec = this.orInstance.classesMap.get(this.idClsName);
+		} else {	//If this exprList belongs to a method with no point
+			classDec = this.orInstance.classesMap.get(this.nameClass);
+		}
+		MethodDecl  methDec = classDec.methods.get(methName);
 
 
-		Type newType = method.type;
+		Type newType = methDec.type;
 		boolean errFlag = false;
 		int paramPos = 0;
 		
 		for (FloydParser.ExpressionContext expr : ctx.expr) {
 			Type curType = visit(expr);
 
-			if (paramPos < method.parameters.size()) {
-				VarDecl newVar = method.getParamByPos(paramPos);
+			if (paramPos < methDec.parameters.size()) {
+				VarDecl newVar = methDec.getParamByPos(paramPos);
 				Type paramType = newVar.type;
 
-				if (!(paramType.name).equals(curType.name)) {
+				//Error that the paramters don't match
+				if (curType != paramType) {
 					newType = Type.ERROR;
 					errFlag = true;
-					// Token curTok = (Token) expr.getPayload();
-					// this.printError(curTok, "wrong parm type " + methName);
-					System.out.println("wrong parm type   on  visitMethExpr() w/ ");
+					this.printError(tok, "wrong parm type");
 					break;
 				}
 			} else {
+				//Error that to many paramters are being passed
 				newType = Type.ERROR;
 				errFlag = true;
-				// Token curTok = (Token) expr.getPayload();
-				// this.printError(curTok, "too many parms " + methName);
-				System.out.println("too many parms on visitMethExpr() w/ ");
+				this.printError(tok, "too many parms");
 				break;
 			}
 			paramPos++;
 		}
-
-		if (!errFlag && paramPos < method.parameters.size()) {
-			newType = Type.ERROR;
-			// Token curTok = (Token) ctx.expression_list().getPayload();
-			// this.printError(curTok, "too few parms " + methName);
-			System.out.println("Need to print Error of too few parms  visitMethExpr() ");
-		}
 		
+		//Error that to few paramters are being passsed to function
+		if (!errFlag && paramPos < methDec.parameters.size()) {
+			newType = Type.ERROR;
+			this.printError(tok, "too few parms");
+		}
 		
 		return newType;
 	}
@@ -398,9 +497,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitExpression(FloydParser.ExpressionContext ctx) {
-		
 		Type newType = visit(ctx.or_expr());
-		
 		return newType;
 	}
 	
@@ -408,14 +505,17 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public Type visitOr_expr(FloydParser.Or_exprContext ctx) {
 		Type newType = null;
 		if(ctx.andExpr.size() > 1) {
-			
+			int posOp = 0;
 			for (FloydParser.And_exprContext andExprDecl : ctx.andExpr) {
 				newType = visit(andExprDecl);
-				if(!(newType.name).equals("boolean")) {
+				if(newType != Type.BOOLEAN && newType != Type.ERROR) {
+					int realPosOp = posOp == 0 ? 0 : posOp -1;
+					Token tok = (Token) ctx.OR(realPosOp).getPayload();
+					this.printError(tok, "the " + ctx.OR(realPosOp).getText() + " bin op can only be used with booleans");			
 					newType = Type.ERROR;
-					System.out.println("Need to print Error somewhere in? visitOr_expr() ");
 					break;
 				}
+				posOp++;
 			}
 		} else {
 			newType = visit(ctx.andExpr.get(0));
@@ -428,14 +528,17 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public Type visitAnd_expr(FloydParser.And_exprContext ctx) {
 		Type newType = null;
 		if(ctx.relExpr.size() > 1) {
-			
+			int posOp = 0;
 			for (FloydParser.Relational_exprContext relExprDecl : ctx.relExpr) {
 				newType = visit(relExprDecl);
-				if(!(newType.name).equals("boolean")) {
+				if(newType != Type.BOOLEAN && newType != Type.ERROR) {
+					int realPosOp = posOp == 0 ? 0 : posOp -1;
+					Token tok = (Token) ctx.AND(realPosOp).getPayload();
+					this.printError(tok, "the " + ctx.AND(realPosOp).getText() + " bin op can only be used with booleans");
 					newType = Type.ERROR;
-					System.out.println("Need to print Error somewhere in? visitAnd_expr() ");
 					break;
-				}	
+				}
+				posOp++;
 			}
 		} else {
 			newType = visit(ctx.relExpr.get(0));
@@ -444,27 +547,39 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		return newType;
 	}
 	
+	
 	@Override
 	public Type visitRelational_expr(FloydParser.Relational_exprContext ctx) {
 		Type newType = Type.BOOLEAN;
 		if(ctx.relational_op() != null) {
 			Type type1 = visit(ctx.strExpr1);
 			Type type2 = visit(ctx.strExpr2);
+			String opVal = ctx.relational_op().getText();
+			Token tok = null;
+			
+			switch(opVal) {
+			case ">":
+				tok = (Token) ctx.relational_op().GT().getPayload();
+				break;
+			case ">=":
+				tok = (Token) ctx.relational_op().GTEQ().getPayload();
+				break;
+			case "=":
+				tok = (Token) ctx.relational_op().EQ().getPayload();
+				break;
+			}
 
-			if(!(type1.name).equals(type2.name)) {
-				System.out.println("Need to print Token <error1> in visitRelational_expr()");
+			if(type1 != type2) {
+				this.printError(tok, "the " + opVal + " can't work on " + type1.name + " " + type2.name);
 				newType = Type.ERROR;
-				//The fallowing doesn't work, need to find out Why!!!!
-				//Token tok = (Token) ctx.strExpr2.getPayload();
-				//this.printError(tok, "feature unsupported");
 			} else if((ctx.relational_op().getText()).equals("=")) {
-				if((type1.name).equals("<error>")) {
-					System.out.println("Need to print Token <error2> in visitRelational_expr()");
+				if(type1 == Type.ERROR) {
+					this.printError(tok, "the " + opVal + " can't work on " + type1.name + " " + type2.name);
 					newType = Type.ERROR;
 				}
 			} else {
-				if(!(type1.name).equals("string") && !(type1.name).equals("int")) {
-					System.out.println("Need to print Token <error> in visitRelational_expr()");
+				if(type1 != Type.INT && type1 != Type.STRING) {
+					this.printError(tok, "the " + opVal + " can't work on " + type1.name + " " + type2.name);
 					newType = Type.ERROR;
 				}
 			}
@@ -475,19 +590,22 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		return newType;
 	}
 	
+	
 	@Override
 	public Type visitString_expr(FloydParser.String_exprContext ctx) {
 		Type newType = null;
 		if(ctx.asExpr.size() > 1) {
+			int posOp = 0;
 			for (FloydParser.Add_sub_exprContext asExprDecl : ctx.asExpr) {
 				newType = visit(asExprDecl);
-				if(!(newType.name).equals("string")) {
-					//Token tok = (Token) asExprDecl.getPayload();
-					//this.printError(tok, "& requires strings");
-					System.out.println("Need to print Token <error> in visitString_expr()");
+				if(newType != Type.STRING && newType != Type.ERROR) {
+					int realPosOp = posOp == 0 ? 0 : posOp -1;
+					Token tok = (Token) ctx.SIGNAND(realPosOp).getPayload();
+					this.printError(tok, "the " + ctx.SIGNAND(realPosOp).getText() + " bin op can only be used with strings");
 					newType = Type.ERROR;
 					break;
 				}
+				posOp++;
 			}
 		} else {
 			newType = visit(ctx.asExpr.get(0));
@@ -502,11 +620,11 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		if(ctx.mdExpr.size() > 1) {
 
 			int posOp = 0;
-			int posExp = 0;
 			for (FloydParser.Mul_div_exprContext mdExprDecl : ctx.mdExpr) {
 				newType = visit(mdExprDecl);
 				if(newType != Type.INT && newType != Type.ERROR) {
-					FloydParser.Add_sub_opContext addsubOp = ctx.add_sub_op(posOp);
+					int realPosOp = posOp == 0 ? 0 : posOp -1;
+					FloydParser.Add_sub_opContext addsubOp = ctx.add_sub_op(realPosOp);
 					
 					//Doing this to be able to get the token
 					Token tok = null;
@@ -515,14 +633,12 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 					} else {
 						tok = (Token) addsubOp.PLUS().getPayload();
 					}
-					this.printError(tok, "the " + addsubOp.getText() + " op can only be used with ints and reals");
+					this.printError(tok, "the " + addsubOp.getText() + " bin op cannot be used with " + newType.name);
 					newType = Type.ERROR;
 					break;
 				}
-				if(posExp != 0) {
-					posOp++;
-				}
-				posExp++;
+				posOp++;
+
 			}
 		} else {
 			newType = visit(ctx.mdExpr.get(0));
@@ -537,11 +653,11 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		
 		if(ctx.unaExpr.size() > 1) {
 			int posOp = 0;
-			int posExp = 0;
 			for (FloydParser.Unary_exprContext unaExprDecl : ctx.unaExpr) {
 				newType = visit(unaExprDecl);
 				if(newType != Type.INT && newType != Type.ERROR) {
-					FloydParser.Mul_div_opContext muldivOp = ctx.mul_div_op(posOp);
+					int realPosOp = posOp == 0 ? 0 : posOp -1;
+					FloydParser.Mul_div_opContext muldivOp = ctx.mul_div_op(realPosOp);
 					
 					//Doing this to be able to get the token
 					Token tok = null;
@@ -554,10 +670,7 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 					newType = Type.ERROR;
 					break;
 				}
-				if(posExp != 0) {
-					posOp++;
-				}
-				posExp++;
+				posOp++;
 			}
 		} else {
 			newType = visit(ctx.unaExpr.get(0));
@@ -573,13 +686,24 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		
 		if(ctx.unary_op() != null) {
 			if(ctx.unary_op().NOT() != null) {
-				if(!(newType.name).equals("boolean")) {
-					System.out.println("Might need to throw an error here visitUnary_expr() 1");
+				if(newType != Type.BOOLEAN && newType != Type.ERROR) {
+					Token tok = (Token) ctx.unary_op().NOT().getPayload();
+					this.printError(tok, "the " + ctx.unary_op().NOT().getText() + " requires a boolean");
 					newType = Type.ERROR;
 				}
 			} else {
-				if(!(newType.name).equals("int")) {
-					System.out.println("Might need to throw an error here visitUnary_expr() 2");
+				if(newType != Type.INT && newType != Type.ERROR) {
+					Token tok = null;
+					String opName = null;
+					if (ctx.unary_op().MINUS() != null) {
+						tok = (Token) ctx.unary_op().MINUS().getPayload();
+						opName = ctx.unary_op().MINUS().getText();
+					} else {
+						tok = (Token) ctx.unary_op().PLUS().getPayload();
+						opName = ctx.unary_op().PLUS().getText();
+					}
+
+					this.printError(tok, "the " + opName + " unary op cannot be used with a " + newType.name);
 					newType = Type.ERROR;
 				}
 			}
@@ -603,36 +727,53 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitPointMethExpr(FloydParser.PointMethExprContext ctx) {
-		
+		this.idClsName = null;
 		Type newType = visit(ctx.primary_expr());
-		if((newType.name).equals("<error>")) {
+		if(newType == Type.ERROR) {
 			//Throw an error
 			System.out.println("class not defined error in visitPointMethExpr()");
 		} else {
 			String methName = ctx.IDENTIFIER().getText();
-			Symbol newSymbol = this.sblTable.lookup(methName);
-			if(newSymbol == null) {
+			ClassDecl classDec = this.orInstance.classesMap.get(this.idClsName);
+			MethodDecl methDec = classDec.methods.get(methName);
+			
+			//Symbol newSymbol = this.sblTable.lookup(methName);
+			if(methDec == null) {
 				Token newToken = (Token) ctx.IDENTIFIER().getPayload();
 				this.printError(newToken, "Undeclared identifier " + methName);
 			} else {
-				this.methTempNames.push(methName);
+				Type pointMethType = null;
 				
-				MethodDecl methDec = (MethodDecl) newSymbol.getAttributes();
+				this.methParamCall = methName;
+				this.methParamCallTok = (Token) ctx.IDENTIFIER().getPayload();
+				
+				this.assignMethCall = methName;
+				
 				newType = methDec.type;
 				
+				//This will run if it has parameters
+				if(ctx.expression_list() != null) {
+					pointMethType = visit(ctx.expression_list());
+				}
 				
-				//Might have to check for parameters... maybe
-				//newType = visit(ctx.expression_list());
-				//if(ctx.expression_list() != null)
+				//If parameter don't match... there will be an error
+				if(pointMethType == Type.ERROR) {
+					newType = pointMethType;
+				}
+				
+				this.methParamCall = null;
+				this.methParamCallTok = null;
 			}
 		}
+
+		this.idClsName = null;
 		
 		return newType;
 	}
 	
 	@Override
 	public Type visitMethExpr(FloydParser.MethExprContext ctx) {
-		Type newType = null;
+		Type newType = Type.ERROR;
 		
 		String methName = ctx.IDENTIFIER().getText();
 		
@@ -640,16 +781,30 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 			Token tok = (Token) ctx.IDENTIFIER().getPayload();
 			this.printError(tok, "Undefined function " + methName);
 		} else {
-			Symbol symb = this.sblTable.lookup(methName);
-			MethodDecl method = (MethodDecl) symb.getAttributes();
-			newType = method.type;
+			ClassDecl classDec = this.orInstance.classesMap.get(nameClass);
+			MethodDecl  methDec = classDec.methods.get(methName);
+			newType = methDec.type;
+			Type methType = null;
+			
+			//Information needed to check method paramters
+			this.methParamCall = methName;
+			this.methParamCallTok = (Token) ctx.IDENTIFIER().getPayload();
+			
+			this.assignMethCall = methName;
 			
 			//This will run if it has parameters
-			//I don't think we need this.
 			if(ctx.expression_list() != null) {
-				this.methTempNames.push(methName);
-				//newType = visit(ctx.expression_list());
+				methType = visit(ctx.expression_list());
 			}
+			
+			//If parameter don't match... there will be an error
+			if(methType == Type.ERROR) {
+				newType = methType;
+			}
+			
+			//Cleaning parameter checking information
+			this.methParamCall = null;
+			this.methParamCallTok = null;
 		}
 		
 		return newType;
@@ -680,13 +835,25 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 		Type newType = null;
 		String name = ctx.IDENTIFIER().getText();
 		Symbol newSymbol = this.sblTable.lookup(name);
-		
+
 		if (newSymbol == null) {
 			Token tok = (Token) ctx.IDENTIFIER().getPayload();
 			this.printError(tok, "Use of undeclared variable " + name);
 			newType = Type.ERROR;
 		} else {
 			Declaration newDeclaration = newSymbol.getAttributes();
+
+			// Will be used to know if the id is a variable, method, or class
+			switch (newDeclaration.kind) {
+			case "class":
+				this.idClsName = name;
+				break;
+			case "method":
+				break;
+			case "variable":
+				this.idVarName = name;
+				break;
+			}
 			newType = newDeclaration.type;
 		}
 
@@ -695,29 +862,21 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	
 	@Override
 	public Type visitStrExpr(FloydParser.StrExprContext ctx) {
-		
-		//Token tok = (Token) ctx.getPayload();
-		//this.printError(tok, "feature unsupported");
-		System.out.println("feature unsupported   on   visitStrExpr()");
-		
 		return Type.STRING;
 	}
 	
 	@Override
 	public Type visitIntExpr(FloydParser.IntExprContext ctx) {
-		
 		return Type.INT;
 	}
 	
 	@Override
 	public Type visitTrueExpr(FloydParser.TrueExprContext ctx) {
-		
 		return Type.BOOLEAN;
 	}
 	
 	@Override
 	public Type visitFalseExpr(FloydParser.FalseExprContext ctx) {
-		
 		return Type.BOOLEAN;
 	}
 	
@@ -755,25 +914,6 @@ public class SemanticChecker extends FloydBaseVisitor<Type> {
 	public void printErrorNT(int line, int col, String error) {
 	
 		System.err.println(this.fileName + ":" + line + "," + col + ":" + error);
-	}
-
-	
-	////////////////////////////////////////////
-	// Helpful Methods
-	////////////////////////////////////////////
-	public VarDecl findVariable(String methName) {
-
-		return null;
-	}
-	
-	public MethodDecl findMethod(String methName) {
-
-		return null;
-	}
-	
-	public ClassDecl findClass(String className) {
-
-		return null;
 	}
 	
 }
